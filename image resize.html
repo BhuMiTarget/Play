@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Advanced Image Resizer Tool</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    #canvas { border: 1px solid #ccc; margin-top: 20px; display: block; }
+    label { margin-right: 12px; }
+    .row { margin-bottom: 14px; }
+  </style>
+</head>
+<body>
+  <h2>Image Resizer Tool</h2>
+  <div class="row">
+    <label for="mode">Units:</label>
+    <select id="mode">
+      <option value="pixels">Pixels (px)</option>
+      <option value="mm">Millimeters (mm:mm)</option>
+      <option value="cm">Centimeters (cm:cm)</option>
+    </select>
+  </div>
+  <div class="row">
+    <label for="width">Width:</label>
+    <input id="width" type="number" min="1" max="2400" value="800" step="1">
+    <label for="height">Height:</label>
+    <input id="height" type="number" min="1" max="2400" value="600" step="1">
+    <span>(Range: 50 to 2400)</span>
+  </div>
+  <div class="row">
+    <label for="file">Import Image:</label>
+    <input type="file" id="file" accept=".jpg,.jpeg,.png">
+  </div>
+  <div class="row">
+    <label for="format">Export Format:</label>
+    <select id="format">
+      <option value="image/png">PNG (.png)</option>
+      <option value="image/jpeg">JPEG (.jpg/.jpeg)</option>
+    </select>
+    <button id="download">Download</button>
+  </div>
+  <canvas id="canvas" width="800" height="600"></canvas>
+  <script>
+    const fileInput = document.getElementById('file');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const widthInput = document.getElementById('width');
+    const heightInput = document.getElementById('height');
+    const modeSelect = document.getElementById('mode');
+    const formatSelect = document.getElementById('format');
+    const downloadBtn = document.getElementById('download');
+    let originalImage = null;
+
+    // Approximate DPI settings for mm/cm<->pixels conversion (default 96)
+    const DPI = 96;
+
+    function toPixels(value, unit) {
+      if(unit === 'pixels') return value;
+      if(unit === 'mm') return Math.round((value / 25.4) * DPI);
+      if(unit === 'cm') return Math.round((value / 2.54) * DPI);
+      return value;
+    }
+
+    modeSelect.addEventListener('change', () => {
+      // Adjust input step
+      switch(modeSelect.value) {
+        case 'pixels':
+          widthInput.step = heightInput.step = 1;
+          break;
+        default:
+          widthInput.step = heightInput.step = 0.1;
+      }
+    });
+
+    fileInput.addEventListener('change', event => {
+      const file = event.target.files[0];
+      if (file && /image\/(png|jpeg)/.test(file.type)) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = new Image();
+          img.onload = () => {
+            originalImage = img;
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+            widthInput.value = img.width;
+            heightInput.value = img.height;
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      } else {
+        alert('Unsupported file type. Please import jpg, jpeg, or png.');
+      }
+    });
+
+    function drawResized() {
+      if (!originalImage) return;
+      let w = parseFloat(widthInput.value);
+      let h = parseFloat(heightInput.value);
+      if (isNaN(w) || isNaN(h)) return;
+      const unit = modeSelect.value;
+      w = Math.max(50, Math.min(2400, toPixels(w, unit)));
+      h = Math.max(50, Math.min(2400, toPixels(h, unit)));
+      canvas.width = w;
+      canvas.height = h;
+      ctx.clearRect(0, 0, w, h);
+      ctx.drawImage(originalImage, 0, 0, w, h);
+    }
+
+    widthInput.addEventListener('input', drawResized);
+    heightInput.addEventListener('input', drawResized);
+    modeSelect.addEventListener('change', drawResized);
+
+    downloadBtn.addEventListener('click', () => {
+      if (!originalImage) return alert('No image to export!');
+      const format = formatSelect.value;
+      let ext = format === 'image/png' ? 'png' : 'jpg';
+      const link = document.createElement('a');
+      link.download = `resized_image.${ext}`;
+      link.href = canvas.toDataURL(format);
+      link.click();
+    });
+  </script>
+</body>
+</html>
