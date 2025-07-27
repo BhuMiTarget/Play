@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Animation Editor</title>
+  <style>
+    #toolbar { margin-bottom:10px; }
+    #timeline { margin-top:12px; }
+    #animationCanvas { border:1px solid #ccc;}
+    .frame {
+      display:inline-block;
+      width:20px; height:20px;
+      border:1px solid #888;
+      margin:2px; cursor:pointer;
+      text-align:center; line-height:20px;
+      font-size:13px;
+    }
+    .frame.selected { background:#42a5f5; color:#fff;}
+  </style>
+</head>
+<body>
+  <!-- Toolbar Buttons -->
+  <div id="toolbar">
+    <button onclick="addShape('rect')">Rectangle</button>
+    <button onclick="addShape('ellipse')">Ellipse</button>
+    <button onclick="toggleOnionSkin()">Onion Skin</button>
+    <button id="playBtn" onclick="togglePlay()">Play</button>
+    <button onclick="exportHTML()">Export HTML</button>
+    <button onclick="exportGIF()">Export GIF</button>
+  </div>
+
+  <canvas id="animationCanvas" width="800" height="600"></canvas>
+  <div id="timeline"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.worker.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized/dist/gif.js"></script>
+  <script>
+    const totalFrames = 24;
+    let frames = Array.from({length: totalFrames}, () => []);
+    let currentFrame = 0;
+    let onionSkin = false;
+    let selectedShape = null;
+
+    // Move/resize state
+    let isDragging = false;
+    let isResizing = false;
+    let activeShape = null;
+    let resizeDirection = null;
+    let dragStartX = 0, dragStartY = 0, shapeStartX = 0, shapeStartY = 0, shapeStartW = 0, shapeStartH = 0;
+
+    // Play state
+    let playing = false, playInterval = null;
+
+    const canvas = document.getElementById('animationCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // --- Drawing Logic ---
+    function drawShapes(shapes, alpha=1.0) {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      for (const shape of shapes) {
+        ctx.beginPath();
+        ctx.fillStyle = shape.color || "#fff176";
+        // Border for selected shape
+        if (shape === selectedShape) {
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = "#FF5722";
+        } else {
+          ctx.lineWidth = 0;
+          ctx.strokeStyle = null;
+        }
+        if (shape.type === "rect") {
+          ctx.fillRect(shape.x, shape.y, shape.w, shape.h);
+          if (shape === selectedShape) ctx.strokeRect(shape.x, shape.y, shape.w, shape.h);
+        }
+        if (shape.type === "ellipse") {
+          ctx.ellipse(shape.x+shape.w/2, shape.y+shape.h/2, shape.w/2, shape.h/2, 0, 0, 2*Math.PI);
+          ctx.fill();
+          if (shape === selectedShape) ctx.stroke();
+        }
+        if (shape === selectedShape) drawResizeHandles(shape);
+      }
+      ctx.restore();
+    }
+
+    function drawResizeHandles(shape) {
+      const size = 8, half = size/2;
+      // Handles: TL, TR, BL, BR
+      const handles = [
+        {x: shape.x, y: shape.y, cursor: 'nwse-resize', dir: 'nw'},
+        {x: shape.x+shape.w, y: shape.y, cursor: 'nesw-resize', dir: 'ne'},
+        {x: shape.x, y: shape.y+shape.h, cursor: 'nesw-resize', dir: 'sw'},
+        {x: shape.x+shape.w, y: shape.y+shape.h, cursor: 'nwse-resize', dir: 'se'}
+      ];
+      ctx.save();
+      ctx.fillStyle = '#FF5722';
+      ctx.strokeStyle = '#FFF';
+      ctx.lineWidth = 2;
+      handles.forEach(h=>{
+        ctx.beginPath();
+        ctx.rect(h.x-half,h.y-half,size,size);
+        ctx.fill(); ctx.stroke();
+      });
+      ctx.restore();
+    }
+
+    function pointInRect(x, y, rect) {
+      return (x >= rect.x && x <= rect.x + rect.w && y >= rect.y && y <= rect.y + rect.h);
+    }
+    function pointInEllipse(x, y, ellipse) {
+      let rx = ellipse.w/2, ry = ellipse.h/2, cx = ellipse.x+rx, cy = ellipse.y+ry;
+      return ((x-cx)**2)/(rx*rx) + ((y-cy)**2)/(ry*ry) <= 1;
+    }
+    function getHandleUnderPoint(shape, x, y) {
+      const size = 8, half = size/2;
+      const handles = [
+        {x: shape.x, y: shape.y, dir: 'nw'},
+        {x: shape.x+shape.w, y: shape.y, dir: 'ne'},
+        {x: shape.x, y: shape.y+shape.h, dir: 'sw'},
+        {x: shape.x+shape.w, y: shape.y+shape.h, dir: 'se'}
+      ];
+      for (const h of handles) {
+        if (x >= h.x-half && x <= h.x+half && y >= h.y-half && y <= h.y+half) return h.dir;
+      }
+      return null;
+    }
+
+    function drawFrame() {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      if (onionSkin && frames[currentFrame-1]) drawShapes(frames[currentFrame-1], 0.25);
+      if (onionSkin && frames[currentFrame+1]) drawShapes(frames[currentFrame+1], 0.25);
+      drawShapes(frames[currentFrame]);
+    }
+
+    function addShape(type) {
+      frames[currentFrame].push({
+        type,
+        x: 100, y: 100, w: 80, h: 60,
+        color: "#" + ((Math.random()*0xffffff)|0).toString(16).padStart(6,'0')
+      });
+      drawFrame();
+    }
+
+    function toggleOnionSkin() { onionSkin = !onionSkin; drawFrame(); }
+    function selectFrame(idx) { currentFrame = idx; selectedShape=null; drawFrame(); updateTimeline(); }
+    function updateTimeline() {
+      const t = document.getElementById('timeline');
+      t.innerHTML='';
+      for(let i=0;i<totalFrames;i++) {
+        const d=document.createElement('div');
+        d.className='frame'+(i===currentFrame?' selected':'');
+        d.onclick=()=>selectFrame(i);
+        d.textContent=i+1;
+        t.appendChild(d);
+      }
+    }
+
+    // --- Move/Resize Mouse Event Handlers ---
+    canvas.addEventListener('mousedown', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left, y = e.clientY - rect.top;
+      const shapes = frames[currentFrame];
+      activeShape = null;
+      resizeDirection = null;
+      // If clicking a resize handle
+      if (selectedShape) {
+        resizeDirection = getHandleUnderPoint(selectedShape, x, y);
+        if (resizeDirection) {
+          isResizing = true;
+          activeShape = selectedShape;
+          dragStartX = x; dragStartY = y;
+          shapeStartX = activeShape.x; shapeStartY = activeShape.y;
+          shapeStartW = activeShape.w; shapeStartH = activeShape.h;
+          return;
+        }
+      }
+      // If clicking inside a shape for moving
+      for (let i = shapes.length - 1; i >= 0; i--) {
+        let shape = shapes[i];
+        let hit = shape.type === 'rect' ? pointInRect(x, y, shape) : pointInEllipse(x, y, shape);
+        if (hit) {
+          selectedShape = shape;
+          activeShape = shape;
+          isDragging = true;
+          dragStartX = x; dragStartY = y;
+          shapeStartX = shape.x; shapeStartY = shape.y;
+          drawFrame();
+          return;
+        }
+      }
+      // Otherwise, deselect
+      selectedShape = null;
+      drawFrame();
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging && !isResizing) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left, y = e.clientY - rect.top;
+      if (isDragging && activeShape) {
+        activeShape.x = shapeStartX + (x - dragStartX);
+        activeShape.y = shapeStartY + (y - dragStartY);
+        drawFrame();
+      }
+      if (isResizing && activeShape) {
+        let dx = x - dragStartX, dy = y - dragStartY;
+        let s = activeShape;
+        switch (resizeDirection) {
+          case 'nw':
+            s.x = shapeStartX + dx; s.y = shapeStartY + dy;
+            s.w = shapeStartW - dx; s.h = shapeStartH - dy; break;
+          case 'ne':
+            s.y = shapeStartY + dy;
+            s.w = shapeStartW + dx; s.h = shapeStartH - dy; break;
+          case 'sw':
+            s.x = shapeStartX + dx;
+            s.w = shapeStartW - dx; s.h = shapeStartH + dy; break;
+          case 'se':
+            s.w = shapeStartW + dx; s.h = shapeStartH + dy; break;
+        }
+        s.w = Math.max(10, s.w); s.h = Math.max(10, s.h);
+        drawFrame();
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      isDragging = false;
+      isResizing = false;
+      activeShape = null;
+      resizeDirection = null;
+    });
+
+    // --- Play functionality ---
+    function togglePlay() {
+      if (playing) {
+        clearInterval(playInterval); playing=false;
+      } else {
+        playInterval = setInterval(() => {
+          currentFrame = (currentFrame+1)%totalFrames;
+          updateTimeline();
+          drawFrame();
+        }, 1000/12);
+        playing=true;
+      }
+      updatePlayButton();
+    }
+    function updatePlayButton() {
+      let btn = document.getElementById('playBtn');
+      btn.textContent = playing ? 'Stop' : 'Play';
+    }
+
+    // --- Export HTML ---
+    function exportHTML() {
+      const shapesData = JSON.stringify(frames);
+      const htmlContent = `
+<!DOCTYPE html>
+<html lang="en"><body>
+<canvas id="playCanvas" width="800" height="600"></canvas>
+<script>
+const frames = ${shapesData};
+let i=0;
+const c=document.getElementById('playCanvas'), ctx=c.getContext('2d');
+function draw() {
+  ctx.clearRect(0,0,800,600);
+  for(const s of frames[i]){
+    ctx.beginPath();
+    ctx.fillStyle=s.color||"#fff176";
+    if(s.type==="rect") ctx.fillRect(s.x,s.y,s.w,s.h);
+    if(s.type==="ellipse"){ ctx.ellipse(s.x+s.w/2,s.y+s.h/2,s.w/2,s.h/2,0,0,6.28); ctx.fill();}
+  }
+  i=(i+1)%frames.length; setTimeout(draw,1000/12);
+}
+draw();
+<\/script>
+</body></html>`;
+      const blob = new Blob([htmlContent], {type:'text/html'});
+      saveAs(blob, "animation.html");
+    }
+
+    // --- Export GIF ---
+    function exportGIF() {
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width: canvas.width,
+        height: canvas.height
+      });
+      for(let i=0;i<totalFrames;i++) {
+        drawShapes(frames[i]);
+        gif.addFrame(ctx, {copy:true, delay:1000/12});
+      }
+      gif.on('finished', function(blob) {
+        saveAs(blob, "animation.gif");
+      });
+      gif.render();
+    }
+
+    // --- INIT ---
+    function init() {
+      updateTimeline();
+      drawFrame();
+      updatePlayButton();
+    }
+    init();
+  </script>
+</body>
+</html>
