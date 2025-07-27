@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Vector Animator</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #f7f7f7;
+    }
+    svg {
+      border: 1px solid #ccc;
+      background: white;
+    }
+  </style>
+</head>
+<body>
+  <svg id="vectorCanvas" width="400" height="100">
+    <circle id="circle" cx="50" cy="50" r="20" fill="#3498db" />
+  </svg>
+  <script>
+    const circle = document.getElementById('circle');
+    let cx = 50;
+    let direction = 1; // 1 for right, -1 for left
+
+    function animate() {
+      if (cx >= 350) direction = -1;
+      if (cx <= 50) direction = 1;
+      cx += direction * 2;
+
+      circle.setAttribute('cx', cx);
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+</body>
+</html>
