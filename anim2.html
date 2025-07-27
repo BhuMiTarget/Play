@@ -1,41 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Simple Vector Animator</title>
+  <meta charset="UTF-8" />
+  <title>Vector Animation Editor Demo</title>
   <style>
-    body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background: #f7f7f7;
-    }
-    svg {
-      border: 1px solid #ccc;
-      background: white;
-    }
+    #canvas { border: 1px solid #ccc; background: #fff; }
+    #toolbar { margin-bottom: 10px; }
   </style>
 </head>
 <body>
-  <svg id="vectorCanvas" width="400" height="100">
-    <circle id="circle" cx="50" cy="50" r="20" fill="#3498db" />
-  </svg>
+  <div id="toolbar">
+    <button onclick="addCircle()">Add Circle</button>
+    <button onclick="animateAll()">Animate</button>
+  </div>
+  <svg id="canvas" width="600" height="300"></svg>
   <script>
-    const circle = document.getElementById('circle');
-    let cx = 50;
-    let direction = 1; // 1 for right, -1 for left
-
-    function animate() {
-      if (cx >= 350) direction = -1;
-      if (cx <= 50) direction = 1;
-      cx += direction * 2;
-
-      circle.setAttribute('cx', cx);
-      requestAnimationFrame(animate);
+    let svg = document.getElementById('canvas');
+    function addCircle() {
+      let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("cx", 50 + Math.random() * 500);
+      circle.setAttribute("cy", 150);
+      circle.setAttribute("r", 30);
+      circle.setAttribute("fill", "#3498db");
+      svg.appendChild(circle);
     }
-
-    animate();
+    function animateAll() {
+      let all = svg.querySelectorAll('circle');
+      all.forEach(c => {
+        let start = +c.getAttribute('cx');
+        let end = start + 200;
+        let dir = 1;
+        function animate() {
+          let cx = +c.getAttribute('cx');
+          if (cx > end) dir = -1;
+          if (cx < start) dir = 1;
+          c.setAttribute('cx', cx + dir * 2);
+          requestAnimationFrame(animate);
+        }
+        animate();
+      });
+    }
   </script>
 </body>
 </html>
+
