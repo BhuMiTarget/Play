@@ -1,282 +1,153 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Advanced Image Resizer & Background Remover</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Image Crop & Resize Tool</title>
   <style>
-    body { font-family: Arial, sans-serif; background:#fafbfc; margin: 0; padding: 0; }
-    .container {
-      max-width: 680px; margin: 36px auto; background: #fff;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-      border-radius: 10px; padding: 36px 30px;
-    }
-    h2 { margin-top: 0; }
-    #canvas { border: 1px solid #d6d8db; margin-top: 18px; display: block; border-radius:4px; }
-    label { margin-right: 9px; }
-    .row { margin-bottom: 17px; display: flex; align-items: center; flex-wrap: wrap;}
-    .row > * { margin-right: 14px !important; }
-    .btn { padding: 6px 16px; font-size: 1rem; border-radius: 4px; border: 1px solid #087de8; color: #fff; background: #2196f3; cursor: pointer; transition: 0.1s; }
-    .btn:disabled { background: #b4d2ee; border-color:#88b8ed; cursor: not-allowed; }
-    .status { margin-left: 18px; font-size: 0.95em;}
-    .note { color:#555;font-size:0.94em;}
-    @media (max-width: 580px) {
-      .container { padding:18px 4vw;}
-      .row { flex-direction: column; align-items: flex-start;}
-      .row > * { margin-right: 0 !important; margin-bottom: 8px !important;}
-    }
+    body { font-family: Arial, sans-serif; padding: 10px; background: #f0f0f0; }
+    canvas { border: 1px solid #ccc; max-width: 100%; margin-top: 10px; touch-action: none; }
+    .row { margin: 10px 0; }
+    input, button, select { padding: 6px; font-size: 16px; }
+    button:disabled { opacity: 0.5; }
+    .note { font-size: 14px; color: #555; margin-left: 10px; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Image Resizer &amp; Background Remover <span style="font-size:0.6em;">(client-side, private)</span></h2>
-    
-    <div class="row">
-      <label for="file">Import Image:</label>
-      <input type="file" id="file" accept=".jpg,.jpeg,.png">
-      <button class="btn" id="reset" style="background:#919191;border-color:#444;" disabled>Reset</button>
-    </div>
+  <h2>🖼️ Image Crop & Resize Tool</h2>
 
-    <div class="row">
-      <label for="aspect">Aspect Ratio:</label>
-      <select id="aspect">
-        <option value="free">Free</option>
-        <option value="1:1">1:1 (Square)</option>
-        <option value="4:3">4:3</option>
-        <option value="3:2">3:2</option>
-        <option value="16:9">16:9</option>
-      </select>
-      <button class="btn" id="cropBtn" disabled>Crop Image</button>
-      <span class="note">Click to drag and crop selected area</span>
-    </div>
-
-    <div class="row">
-      <label for="mode">Units:</label>
-      <select id="mode">
-        <option value="pixels">Pixels (px)</option>
-        <option value="mm">Millimeters (mm:mm)</option>
-        <option value="cm">Centimeters (cm:cm)</option>
-      </select>
-    </div>
-
-    <div class="row">
-      <label for="width">Width:</label>
-      <input id="width" type="number" min="1" max="2400" value="800" step="1">
-      <label for="height">Height:</label>
-      <input id="height" type="number" min="1" max="2400" value="600" step="1">
-      <span class="note">(Range: 50 to 2400)</span>
-    </div>
-
-    <div class="row">
-      <button class="btn" id="bgremove" disabled>Remove Background</button>
-      <span class="note" id="bgnote"></span>
-    </div>
-
-    <div class="row">
-      <label for="format">Export Format:</label>
-      <select id="format">
-        <option value="image/png">PNG (.png, preserves transparency)</option>
-        <option value="image/jpeg">JPEG (.jpg/.jpeg)</option>
-      </select>
-      <button class="btn" id="download" disabled>Download</button>
-      <span class="status" id="status"></span>
-    </div>
-
-    <canvas id="canvas" width="800" height="600"></canvas>
-
-    <div style="margin:18px 0 0 2px;" class="note">
-      <b>How to use?</b> Import an image → Crop (optional) → Remove background → Resize → Download.<br>
-      <b>TIP:</b> Use PNG when background is removed to keep transparency.<br>
-      All processing is safe and <b>happens only in your browser</b>.<br>
-      <span id="browserwarn" style="color:#d54e21"></span>
-    </div>
-
-    <div style="color:#bbb;font-size:12px;margin-top:15px;text-align:center">© 2024 – Demo</div>
+  <div class="row">
+    <input type="file" id="fileInput" accept="image/*">
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/ort.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.8.0/dist/background-removal.min.js"></script>
+  <div class="row">
+    <button id="removeBgBtn" disabled>Remove Background</button>
+    <button id="downloadBtn" disabled>Download Image</button>
+  </div>
+
+  <div class="row">
+    <label for="aspect">Aspect Ratio:</label>
+    <select id="aspect">
+      <option value="free">Free</option>
+      <option value="1:1">1:1</option>
+      <option value="4:3">4:3</option>
+      <option value="16:9">16:9</option>
+    </select>
+    <button id="cropBtn" disabled>✂️ Crop Image</button>
+    <span class="note">Click and drag to crop area</span>
+  </div>
+
+  <div class="row">
+    <label>Resize:</label>
+    <input type="number" id="widthInput" placeholder="Width" style="width:80px;">
+    <input type="number" id="heightInput" placeholder="Height" style="width:80px;">
+    <button id="resizeBtn" disabled>↔ Resize</button>
+  </div>
+
+  <canvas id="canvas"></canvas>
+
+  <p id="status"></p>
+
   <script>
-    const fileInput = document.getElementById('file');
+    const fileInput = document.getElementById('fileInput');
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    const widthInput = document.getElementById('width');
-    const heightInput = document.getElementById('height');
-    const modeSelect = document.getElementById('mode');
-    const formatSelect = document.getElementById('format');
-    const downloadBtn = document.getElementById('download');
-    const removeBgBtn = document.getElementById('bgremove');
-    const resetBtn = document.getElementById('reset');
+    const removeBgBtn = document.getElementById('removeBgBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const resizeBtn = document.getElementById('resizeBtn');
+    const widthInput = document.getElementById('widthInput');
+    const heightInput = document.getElementById('heightInput');
     const cropBtn = document.getElementById('cropBtn');
     const aspectSelect = document.getElementById('aspect');
     const statusEl = document.getElementById('status');
-    const bgnoteEl = document.getElementById('bgnote');
-    const DPI = 96;
 
     let originalImage = null;
     let bgRemovedImage = null;
     let imageBackup = null;
+    let cropping = false;
+    let cropStart = null;
+    let cropEnd = null;
 
-    function toPixels(value, unit) {
-      if(unit === 'pixels') return value;
-      if(unit === 'mm') return Math.round((value / 25.4) * DPI);
-      if(unit === 'cm') return Math.round((value / 2.54) * DPI);
-      return value;
+    function drawImage(image) {
+      canvas.width = image.width;
+      canvas.height = image.height;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(image, 0, 0);
     }
-
-    function checkBrowser() {
-      try {
-        if (!window.createImageBitmap && !window.OffscreenCanvas) {
-          document.getElementById('browserwarn').textContent =
-            "Your browser may not fully support AI background removal. Chrome, Firefox, Edge or Safari 14+ recommended.";
-        }
-      } catch {}
-    }
-    checkBrowser();
 
     function drawResized() {
-      if (!originalImage && !bgRemovedImage) return;
-      let w = parseFloat(widthInput.value);
-      let h = parseFloat(heightInput.value);
-      if (isNaN(w) || isNaN(h)) return;
-      const unit = modeSelect.value;
-      w = Math.max(50, Math.min(2400, toPixels(w, unit)));
-      h = Math.max(50, Math.min(2400, toPixels(h, unit)));
+      const w = parseInt(widthInput.value);
+      const h = parseInt(heightInput.value);
+      if (!w || !h) return;
       canvas.width = w;
       canvas.height = h;
       ctx.clearRect(0, 0, w, h);
       ctx.drawImage(bgRemovedImage || originalImage, 0, 0, w, h);
     }
 
-    fileInput.addEventListener('change', (event) => {
-      const file = event.target.files[0];
-      if (file && /image\/(png|jpeg)/.test(file.type)) {
-        const reader = new FileReader();
-        reader.onload = e => {
-          const img = new window.Image();
-          img.onload = () => {
-            originalImage = img;
-            bgRemovedImage = null;
-            imageBackup = img;
-            canvas.width = img.width;
-            canvas.height = img.height;
-            ctx.drawImage(img, 0, 0);
-            widthInput.value = img.width;
-            heightInput.value = img.height;
-            resetBtn.disabled = false;
-            downloadBtn.disabled = false;
-            removeBgBtn.disabled = false;
-            cropBtn.disabled = false;
-            bgnoteEl.textContent = "";
-            statusEl.textContent = "";
-          };
-          img.src = e.target.result;
+    fileInput.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = evt => {
+        const img = new Image();
+        img.onload = () => {
+          originalImage = img;
+          bgRemovedImage = null;
+          imageBackup = img;
+          widthInput.value = img.width;
+          heightInput.value = img.height;
+          drawImage(img);
+          removeBgBtn.disabled = false;
+          downloadBtn.disabled = false;
+          resizeBtn.disabled = false;
+          cropBtn.disabled = false;
+          statusEl.textContent = "Image loaded.";
         };
-        reader.readAsDataURL(file);
-      } else {
-        alert('Unsupported file type. Please import jpg, jpeg, or png.');
-      }
-    });
-
-    resetBtn.addEventListener('click', () => {
-      if (!imageBackup) return;
-      originalImage = imageBackup;
-      bgRemovedImage = null;
-      widthInput.value = originalImage.width;
-      heightInput.value = originalImage.height;
-      canvas.width = originalImage.width;
-      canvas.height = originalImage.height;
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      ctx.drawImage(originalImage, 0, 0);
-      statusEl.textContent = "";
-      bgnoteEl.textContent = "";
-      downloadBtn.disabled = false;
-      removeBgBtn.disabled = false;
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
     });
 
     removeBgBtn.addEventListener('click', async () => {
-      if (!originalImage) return;
-      removeBgBtn.disabled = true;
-      resetBtn.disabled = true;
-      downloadBtn.disabled = true;
-      statusEl.textContent = "";
-      bgnoteEl.textContent = "AI loading... (first use: 40-80MB model may take up to a minute)";
-      try {
-        ctx.save();
-        ctx.globalAlpha = 0.4; ctx.fillStyle = '#fff';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.restore();
-
-        const srcCanvas = document.createElement('canvas');
-        srcCanvas.width = originalImage.width;
-        srcCanvas.height = originalImage.height;
-        srcCanvas.getContext('2d').drawImage(originalImage, 0, 0);
-        statusEl.textContent = "Removing background...";
-        bgnoteEl.textContent = "Processing image with AI…";
-
-        const { BackgroundRemoval } = window.backgroundRemoval;
-        const remover = await BackgroundRemoval.loadModel();
-        const mask = await remover.removeBackground(srcCanvas);
-
-        const outCanvas = document.createElement('canvas');
-        outCanvas.width = srcCanvas.width;
-        outCanvas.height = srcCanvas.height;
-        const outCtx = outCanvas.getContext('2d');
-        outCtx.drawImage(originalImage, 0, 0);
-        const outImgData = outCtx.getImageData(0,0,srcCanvas.width,srcCanvas.height);
-        const maskData = mask.data;
-        for(let i=0; i<maskData.length; i += 4) {
-          outImgData.data[i+3] = maskData[i+3];
-        }
-        outCtx.putImageData(outImgData, 0, 0);
-
-        bgRemovedImage = new window.Image();
-        bgRemovedImage.onload = () => {
-          canvas.width = bgRemovedImage.width;
-          canvas.height = bgRemovedImage.height;
-          widthInput.value = bgRemovedImage.width;
-          heightInput.value = bgRemovedImage.height;
-          ctx.clearRect(0,0,canvas.width,canvas.height);
-          ctx.drawImage(bgRemovedImage, 0, 0);
-          statusEl.textContent = "Background removed ✔";
-          bgnoteEl.textContent = "Transparent background! PNG format will keep transparency.";
-          resetBtn.disabled = false;
-          downloadBtn.disabled = false;
-        };
-        bgRemovedImage.src = outCanvas.toDataURL("image/png");
-      } catch (e) {
-        alert("Background removal failed: " + (e.message || e));
-        statusEl.textContent = "Error. Try reload.";
-        bgnoteEl.textContent = "";
-        removeBgBtn.disabled = false;
-        downloadBtn.disabled = false;
-        resetBtn.disabled = false;
-      }
+      statusEl.textContent = "Removing background...";
+      const formData = new FormData();
+      formData.append("image_file", fileInput.files[0]);
+      formData.append("size", "auto");
+      const res = await fetch("https://api.remove.bg/v1.0/removebg", {
+        method: "POST",
+        headers: { "X-Api-Key": "INSERT_YOUR_API_KEY_HERE" },
+        body: formData
+      });
+      const blob = await res.blob();
+      const img = new Image();
+      img.onload = () => {
+        bgRemovedImage = img;
+        imageBackup = img;
+        drawImage(img);
+        statusEl.textContent = "Background removed ✔";
+      };
+      img.src = URL.createObjectURL(blob);
     });
 
     downloadBtn.addEventListener('click', () => {
-      if (!originalImage && !bgRemovedImage) return alert('No image to export!');
-      const format = formatSelect.value;
-      let ext = format === 'image/png' ? 'png' : 'jpg';
-
-      if (format === 'image/jpeg' && bgRemovedImage) {
-        let tempCanvas = document.createElement('canvas');
-        tempCanvas.width = canvas.width;
-        tempCanvas.height = canvas.height;
-        let tempCtx = tempCanvas.getContext('2d');
-        tempCtx.fillStyle = '#fff';
-        tempCtx.fillRect(0,0,canvas.width,canvas.height);
-        tempCtx.drawImage(canvas,0,0);
-        const link = document.createElement('a');
-        link.download = `resized_image.${ext}`;
-        link.href = tempCanvas.toDataURL(format);
-        link.click();
-        return;
-      }
-
       const link = document.createElement('a');
-      link.download = `resized_image.${ext}`;
-      link.href = canvas.toDataURL(format);
+      link.download = "edited-image.png";
+      link.href = canvas.toDataURL();
       link.click();
+    });
+
+    resizeBtn.addEventListener('click', () => {
+      drawResized();
+      statusEl.textContent = "Image resized ✔";
+    });
+
+    cropBtn.addEventListener('click', () => {
+      cropping = true;
+      cropStart = null;
+      cropEnd = null;
+      canvas.style.cursor = 'crosshair';
+      statusEl.textContent = "Cropping mode: drag to select area.";
     });
 
     function getAspectRatio() {
@@ -286,51 +157,36 @@
       return w / h;
     }
 
-    let cropping = false;
-    let cropStart = null;
-    let cropEnd = null;
-
-    cropBtn.addEventListener('click', () => {
-      cropping = true;
-      cropStart = null;
-      cropEnd = null;
-      statusEl.textContent = "Cropping mode: drag to select area.";
-      canvas.style.cursor = 'crosshair';
-    });
-
-    canvas.addEventListener('mousedown', (e) => {
+    canvas.addEventListener('mousedown', e => {
       if (!cropping) return;
       const rect = canvas.getBoundingClientRect();
       cropStart = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-      cropEnd = null;
     });
 
-    canvas.addEventListener('mousemove', (e) => {
+    canvas.addEventListener('mousemove', e => {
       if (!cropping || !cropStart) return;
       const rect = canvas.getBoundingClientRect();
-      const aspect = getAspectRatio();
-      let endX = e.clientX - rect.left;
-      let endY = e.clientY - rect.top;
-      let width = endX - cropStart.x;
-      let height = endY - cropStart.y;
+      let x = e.clientX - rect.left;
+      let y = e.clientY - rect.top;
+      let aspect = getAspectRatio();
+
+      let dx = x - cropStart.x;
+      let dy = y - cropStart.y;
+
       if (aspect) {
-        const dirX = width >= 0 ? 1 : -1;
-        const dirY = height >= 0 ? 1 : -1;
-        width = Math.abs(width);
-        height = Math.abs(height);
-        if (width / height > aspect) {
-          width = height * aspect;
+        if (Math.abs(dx) > Math.abs(dy)) {
+          dy = Math.sign(dy) * Math.abs(dx) / aspect;
         } else {
-          height = width / aspect;
+          dx = Math.sign(dx) * Math.abs(dy) * aspect;
         }
-        width *= dirX;
-        height *= dirY;
-        endX = cropStart.x + width;
-        endY = cropStart.y + height;
+        x = cropStart.x + dx;
+        y = cropStart.y + dy;
       }
-      cropEnd = { x: endX, y: endY };
-      drawResized();
-      ctx.strokeStyle = '#f00';
+
+      cropEnd = { x, y };
+
+      drawImage(imageBackup);
+      ctx.strokeStyle = 'red';
       ctx.lineWidth = 2;
       ctx.setLineDash([6]);
       ctx.strokeRect(
@@ -339,25 +195,30 @@
         cropEnd.x - cropStart.x,
         cropEnd.y - cropStart.y
       );
+      ctx.setLineDash([]);
     });
 
     canvas.addEventListener('mouseup', () => {
       if (!cropping || !cropStart || !cropEnd) return;
       cropping = false;
       canvas.style.cursor = 'default';
-      ctx.setLineDash([]);
+
       let x = Math.min(cropStart.x, cropEnd.x);
       let y = Math.min(cropStart.y, cropEnd.y);
       let w = Math.abs(cropEnd.x - cropStart.x);
       let h = Math.abs(cropEnd.y - cropStart.y);
+
       if (w < 5 || h < 5) {
         statusEl.textContent = "Crop area too small.";
         return;
       }
-      const temp = document.createElement('canvas');
-      temp.width = w;
-      temp.height = h;
-      temp.getContext('2d').drawImage(canvas, x, y, w, h, 0, 0, w, h);
+
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = w;
+      tempCanvas.height = h;
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCtx.drawImage(canvas, x, y, w, h, 0, 0, w, h);
+
       const img = new Image();
       img.onload = () => {
         originalImage = img;
@@ -371,12 +232,8 @@
         ctx.drawImage(img, 0, 0);
         statusEl.textContent = "Image cropped ✔";
       };
-      img.src = temp.toDataURL();
+      img.src = tempCanvas.toDataURL();
     });
-
-    widthInput.addEventListener('input', drawResized);
-    heightInput.addEventListener('input', drawResized);
-    modeSelect.addEventListener('change', drawResized);
   </script>
 </body>
 </html>
