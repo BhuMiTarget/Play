@@ -2,152 +2,198 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Image Crop & Resize Tool</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Image Crop & Resize</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 10px; background: #f0f0f0; }
-    canvas { border: 1px solid #ccc; max-width: 100%; margin-top: 10px; touch-action: none; }
-    .row { margin: 10px 0; }
-    input, button, select { padding: 6px; font-size: 16px; }
-    button:disabled { opacity: 0.5; }
-    .note { font-size: 14px; color: #555; margin-left: 10px; }
+    body {
+      font-family: sans-serif;
+      margin: 10px;
+      background: #f0f0f0;
+    }
+    .container {
+      max-width: 100%;
+      margin: auto;
+    }
+    .row {
+      margin: 10px 0;
+    }
+    canvas {
+      max-width: 100%;
+      border: 1px solid #999;
+      touch-action: none;
+    }
+    .btn {
+      padding: 6px 12px;
+      margin: 4px;
+    }
+    #cropOverlay {
+      position: absolute;
+      border: 2px dashed red;
+      pointer-events: none;
+    }
+    .note {
+      font-size: 0.9em;
+      color: #555;
+    }
   </style>
 </head>
 <body>
-  <h2>🖼️ Image Crop & Resize Tool</h2>
+  <div class="container">
+    <h2>Image Crop & Resize Tool</h2>
 
-  <div class="row">
-    <input type="file" id="fileInput" accept="image/*">
+    <div class="row">
+      <input type="file" id="upload" accept="image/*">
+    </div>
+
+    <div class="row">
+      <button class="btn" id="removeBgBtn" disabled>Remove Background</button>
+      <span class="note">Requires internet (uses remove.bg)</span>
+    </div>
+
+    <div class="row">
+      <button class="btn" id="cropBtn" disabled>Crop Image</button>
+      <label for="aspect">Aspect Ratio:</label>
+      <select id="aspect">
+        <option value="free">Free</option>
+        <option value="1:1">1:1 (Square)</option>
+        <option value="4:3">4:3</option>
+        <option value="3:2">3:2</option>
+        <option value="16:9">16:9</option>
+      </select>
+    </div>
+
+    <div class="row">
+      <label for="width">Width:</label>
+      <input type="number" id="width" min="1" />
+      <label for="height">Height:</label>
+      <input type="number" id="height" min="1" />
+      <button class="btn" id="resizeBtn" disabled>Resize</button>
+    </div>
+
+    <div class="row">
+      <button class="btn" id="downloadBtn" disabled>Download</button>
+    </div>
+
+    <div class="row">
+      <canvas id="canvas"></canvas>
+      <div id="cropOverlay"></div>
+    </div>
+
+    <div class="row">
+      <span id="status" class="note">No image loaded.</span>
+    </div>
   </div>
-
-  <div class="row">
-    <button id="removeBgBtn" disabled>Remove Background</button>
-    <button id="downloadBtn" disabled>Download Image</button>
-  </div>
-
-  <div class="row">
-    <label for="aspect">Aspect Ratio:</label>
-    <select id="aspect">
-      <option value="free">Free</option>
-      <option value="1:1">1:1</option>
-      <option value="4:3">4:3</option>
-      <option value="16:9">16:9</option>
-    </select>
-    <button id="cropBtn" disabled>✂️ Crop Image</button>
-    <span class="note">Click and drag to crop area</span>
-  </div>
-
-  <div class="row">
-    <label>Resize:</label>
-    <input type="number" id="widthInput" placeholder="Width" style="width:80px;">
-    <input type="number" id="heightInput" placeholder="Height" style="width:80px;">
-    <button id="resizeBtn" disabled>↔ Resize</button>
-  </div>
-
-  <canvas id="canvas"></canvas>
-
-  <p id="status"></p>
 
   <script>
-    const fileInput = document.getElementById('fileInput');
+    const uploadInput = document.getElementById('upload');
+    const removeBgBtn = document.getElementById('removeBgBtn');
+    const cropBtn = document.getElementById('cropBtn');
+    const resizeBtn = document.getElementById('resizeBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const widthInput = document.getElementById('width');
+    const heightInput = document.getElementById('height');
+    const aspectSelect = document.getElementById('aspect');
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    const removeBgBtn = document.getElementById('removeBgBtn');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const resizeBtn = document.getElementById('resizeBtn');
-    const widthInput = document.getElementById('widthInput');
-    const heightInput = document.getElementById('heightInput');
-    const cropBtn = document.getElementById('cropBtn');
-    const aspectSelect = document.getElementById('aspect');
+    const cropOverlay = document.getElementById('cropOverlay');
     const statusEl = document.getElementById('status');
 
     let originalImage = null;
     let bgRemovedImage = null;
-    let imageBackup = null;
     let cropping = false;
     let cropStart = null;
     let cropEnd = null;
 
-    function drawImage(image) {
-      canvas.width = image.width;
-      canvas.height = image.height;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(image, 0, 0);
-    }
-
     function drawResized() {
-      const w = parseInt(widthInput.value);
-      const h = parseInt(heightInput.value);
-      if (!w || !h) return;
-      canvas.width = w;
-      canvas.height = h;
-      ctx.clearRect(0, 0, w, h);
-      ctx.drawImage(bgRemovedImage || originalImage, 0, 0, w, h);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const img = bgRemovedImage || originalImage;
+      if (img) ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     }
 
-    fileInput.addEventListener('change', e => {
+    uploadInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      const reader = new FileReader();
-      reader.onload = evt => {
-        const img = new Image();
-        img.onload = () => {
-          originalImage = img;
-          bgRemovedImage = null;
-          imageBackup = img;
-          widthInput.value = img.width;
-          heightInput.value = img.height;
-          drawImage(img);
-          removeBgBtn.disabled = false;
-          downloadBtn.disabled = false;
-          resizeBtn.disabled = false;
-          cropBtn.disabled = false;
-          statusEl.textContent = "Image loaded.";
-        };
-        img.src = evt.target.result;
+
+      const img = new Image();
+      img.onload = () => {
+        originalImage = img;
+        bgRemovedImage = null;
+        canvas.width = img.width;
+        canvas.height = img.height;
+        widthInput.value = img.width;
+        heightInput.value = img.height;
+        drawResized();
+        statusEl.textContent = "Image loaded.";
+        removeBgBtn.disabled = false;
+        resizeBtn.disabled = false;
+        downloadBtn.disabled = false;
+        cropBtn.disabled = false;
       };
-      reader.readAsDataURL(file);
+      img.src = URL.createObjectURL(file);
     });
 
     removeBgBtn.addEventListener('click', async () => {
+      if (!originalImage) return;
       statusEl.textContent = "Removing background...";
-      const formData = new FormData();
-      formData.append("image_file", fileInput.files[0]);
-      formData.append("size", "auto");
-      const res = await fetch("https://api.remove.bg/v1.0/removebg", {
-        method: "POST",
-        headers: { "X-Api-Key": "INSERT_YOUR_API_KEY_HERE" },
-        body: formData
-      });
-      const blob = await res.blob();
-      const img = new Image();
-      img.onload = () => {
-        bgRemovedImage = img;
-        imageBackup = img;
-        drawImage(img);
-        statusEl.textContent = "Background removed ✔";
-      };
-      img.src = URL.createObjectURL(blob);
-    });
 
-    downloadBtn.addEventListener('click', () => {
-      const link = document.createElement('a');
-      link.download = "edited-image.png";
-      link.href = canvas.toDataURL();
-      link.click();
+      const blob = await fetch(originalImage.src).then(res => res.blob());
+      const formData = new FormData();
+      formData.append("image_file", blob);
+      formData.append("size", "auto");
+
+      try {
+        const res = await fetch("https://api.remove.bg/v1.0/removebg", {
+          method: "POST",
+          headers: { "X-Api-Key": "INSERT_YOUR_API_KEY" },
+          body: formData,
+        });
+
+        if (!res.ok) throw new Error("Background removal failed");
+
+        const blobResult = await res.blob();
+        const img = new Image();
+        img.onload = () => {
+          bgRemovedImage = img;
+          canvas.width = img.width;
+          canvas.height = img.height;
+          widthInput.value = img.width;
+          heightInput.value = img.height;
+          drawResized();
+          statusEl.textContent = "Background removed.";
+        };
+        img.src = URL.createObjectURL(blobResult);
+      } catch (err) {
+        statusEl.textContent = "Error removing background.";
+      }
     });
 
     resizeBtn.addEventListener('click', () => {
-      drawResized();
-      statusEl.textContent = "Image resized ✔";
+      const w = parseInt(widthInput.value);
+      const h = parseInt(heightInput.value);
+      if (w && h) {
+        const img = bgRemovedImage || originalImage;
+        const temp = document.createElement('canvas');
+        temp.width = w;
+        temp.height = h;
+        temp.getContext('2d').drawImage(img, 0, 0, w, h);
+        const newImg = new Image();
+        newImg.onload = () => {
+          originalImage = newImg;
+          bgRemovedImage = null;
+          canvas.width = w;
+          canvas.height = h;
+          drawResized();
+          statusEl.textContent = "Image resized.";
+        };
+        newImg.src = temp.toDataURL();
+      }
     });
 
-    cropBtn.addEventListener('click', () => {
-      cropping = true;
-      cropStart = null;
-      cropEnd = null;
-      canvas.style.cursor = 'crosshair';
-      statusEl.textContent = "Cropping mode: drag to select area.";
+    downloadBtn.addEventListener('click', () => {
+      const a = document.createElement('a');
+      a.download = "image.png";
+      a.href = canvas.toDataURL();
+      a.click();
     });
 
     function getAspectRatio() {
@@ -157,50 +203,63 @@
       return w / h;
     }
 
-    canvas.addEventListener('mousedown', e => {
+    cropBtn.addEventListener('click', () => {
+      cropping = true;
+      cropStart = null;
+      cropEnd = null;
+      cropOverlay.style.display = 'none';
+      statusEl.textContent = "Cropping mode: drag on image.";
+      canvas.style.cursor = 'crosshair';
+    });
+
+    canvas.addEventListener('mousedown', (e) => {
       if (!cropping) return;
       const rect = canvas.getBoundingClientRect();
       cropStart = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     });
 
-    canvas.addEventListener('mousemove', e => {
+    canvas.addEventListener('mousemove', (e) => {
       if (!cropping || !cropStart) return;
       const rect = canvas.getBoundingClientRect();
-      let x = e.clientX - rect.left;
-      let y = e.clientY - rect.top;
-      let aspect = getAspectRatio();
+      const aspect = getAspectRatio();
 
-      let dx = x - cropStart.x;
-      let dy = y - cropStart.y;
+      let endX = e.clientX - rect.left;
+      let endY = e.clientY - rect.top;
+      let width = endX - cropStart.x;
+      let height = endY - cropStart.y;
 
       if (aspect) {
-        if (Math.abs(dx) > Math.abs(dy)) {
-          dy = Math.sign(dy) * Math.abs(dx) / aspect;
+        const dirX = width >= 0 ? 1 : -1;
+        const dirY = height >= 0 ? 1 : -1;
+        width = Math.abs(width);
+        height = Math.abs(height);
+
+        if (width / height > aspect) {
+          width = height * aspect;
         } else {
-          dx = Math.sign(dx) * Math.abs(dy) * aspect;
+          height = width / aspect;
         }
-        x = cropStart.x + dx;
-        y = cropStart.y + dy;
+
+        width *= dirX;
+        height *= dirY;
+        endX = cropStart.x + width;
+        endY = cropStart.y + height;
       }
 
-      cropEnd = { x, y };
+      cropEnd = { x: endX, y: endY };
 
-      drawImage(imageBackup);
-      ctx.strokeStyle = 'red';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([6]);
-      ctx.strokeRect(
-        cropStart.x,
-        cropStart.y,
-        cropEnd.x - cropStart.x,
-        cropEnd.y - cropStart.y
-      );
-      ctx.setLineDash([]);
+      // Draw overlay box
+      cropOverlay.style.display = 'block';
+      cropOverlay.style.left = Math.min(cropStart.x, cropEnd.x) + canvas.offsetLeft + 'px';
+      cropOverlay.style.top = Math.min(cropStart.y, cropEnd.y) + canvas.offsetTop + 'px';
+      cropOverlay.style.width = Math.abs(cropEnd.x - cropStart.x) + 'px';
+      cropOverlay.style.height = Math.abs(cropEnd.y - cropStart.y) + 'px';
     });
 
     canvas.addEventListener('mouseup', () => {
       if (!cropping || !cropStart || !cropEnd) return;
       cropping = false;
+      cropOverlay.style.display = 'none';
       canvas.style.cursor = 'default';
 
       let x = Math.min(cropStart.x, cropEnd.x);
@@ -213,26 +272,23 @@
         return;
       }
 
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = w;
-      tempCanvas.height = h;
-      const tempCtx = tempCanvas.getContext('2d');
-      tempCtx.drawImage(canvas, x, y, w, h, 0, 0, w, h);
+      const temp = document.createElement('canvas');
+      temp.width = w;
+      temp.height = h;
+      temp.getContext('2d').drawImage(canvas, x, y, w, h, 0, 0, w, h);
 
       const img = new Image();
       img.onload = () => {
         originalImage = img;
         bgRemovedImage = null;
-        imageBackup = img;
         canvas.width = w;
         canvas.height = h;
         widthInput.value = w;
         heightInput.value = h;
-        ctx.clearRect(0, 0, w, h);
-        ctx.drawImage(img, 0, 0);
-        statusEl.textContent = "Image cropped ✔";
+        drawResized();
+        statusEl.textContent = "Image cropped.";
       };
-      img.src = tempCanvas.toDataURL();
+      img.src = temp.toDataURL();
     });
   </script>
 </body>
