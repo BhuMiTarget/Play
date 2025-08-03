@@ -41,12 +41,6 @@
       flex: 1;
       height: 100%;
     }
-    #controls {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
     .chapter {
       cursor: pointer;
       margin-bottom: 5px;
@@ -59,7 +53,6 @@
       background: #2e2e2e;
       color: #f5f5f5;
     }
-
     #progressContainer {
       width: 100%;
       background: #ddd;
@@ -70,14 +63,12 @@
       display: none;
       z-index: 1000;
     }
-
     #progressBar {
       height: 100%;
       background: #27ae60;
       width: 0%;
       transition: width 0.2s;
     }
-
     #progressText {
       position: fixed;
       top: 5px;
@@ -90,6 +81,29 @@
       display: none;
       z-index: 1001;
     }
+    #startButton {
+      padding: 6px 12px;
+      background: #27ae60;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      display: none;
+    }
+    #navButtons {
+      display: flex;
+      gap: 10px;
+    }
+    #searchInput {
+      padding: 4px;
+      border-radius: 4px;
+      border: none;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+    .hidden {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
@@ -100,23 +114,29 @@
   <header>
     <div>
       <input type="file" id="fileInput" accept=".epub" />
+      <button id="startButton">Start Reading</button>
       <button onclick="toggleSidebar()">☰ Chapters</button>
     </div>
     <div id="controls">
       <label>Font:
         <input type="range" min="80" max="200" value="100" id="fontSizeSlider" />
       </label>
+      <button onclick="prevPage()">←</button>
+      <button onclick="nextPage()">→</button>
       <button onclick="toggleDark()">🌙</button>
     </div>
   </header>
 
   <div id="main">
-    <div id="sidebar"></div>
+    <div id="sidebar">
+      <input id="searchInput" placeholder="Search chapters..." />
+      <div id="chapterList"></div>
+    </div>
     <div id="viewer"></div>
   </div>
 
   <script>
-    let book, rendition, currentKey = "";
+    let book, rendition, currentKey = "", selectedFile = null;
 
     const viewer = document.getElementById("viewer");
     const sidebar = document.getElementById("sidebar");
@@ -124,6 +144,18 @@
     const progressBar = document.getElementById("progressBar");
     const progressContainer = document.getElementById("progressContainer");
     const progressText = document.getElementById("progressText");
+    const startButton = document.getElementById("startButton");
+    const searchInput = document.getElementById("searchInput");
+    const chapterList = document.getElementById("chapterList");
+
+    if (localStorage.getItem("darkMode") === "true") {
+      document.body.classList.add("dark");
+    }
+
+    const savedFont = localStorage.getItem("fontSize");
+    if (savedFont) {
+      fontSizeSlider.value = savedFont;
+    }
 
     function toggleSidebar() {
       sidebar.style.display = sidebar.style.display === "block" ? "none" : "block";
@@ -131,6 +163,7 @@
 
     function toggleDark() {
       document.body.classList.toggle("dark");
+      localStorage.setItem("darkMode", document.body.classList.contains("dark"));
     }
 
     function saveBookmark(location) {
@@ -140,16 +173,20 @@
     }
 
     document.getElementById("fileInput").addEventListener("change", function () {
-      const file = this.files[0];
-      if (!file || !file.name.endsWith(".epub")) {
-        alert("Please upload a valid .epub file");
+      selectedFile = this.files[0];
+      if (!selectedFile || !selectedFile.name.endsWith(".epub")) {
+        alert("Please select a valid .epub file");
         return;
       }
+      startButton.style.display = "inline-block";
+    });
 
-      const bookId = file.name.replace(/\W+/g, "_");
+    startButton.addEventListener("click", function () {
+      if (!selectedFile) return;
+
+      const bookId = selectedFile.name.replace(/\W+/g, "_");
       currentKey = "bookmark_" + bookId;
 
-      // Progress tracking
       progressContainer.style.display = "block";
       progressText.style.display = "block";
 
@@ -161,20 +198,17 @@
           progressText.textContent = percent + "%";
         }
       };
-
-      reader.onload = function () {
+      reader.onload = () => {
         progressBar.style.width = "100%";
         progressText.textContent = "100%";
-
         setTimeout(() => {
           progressContainer.style.display = "none";
           progressText.style.display = "none";
         }, 800);
       };
-      reader.readAsArrayBuffer(file); // Just for progress
+      reader.readAsArrayBuffer(selectedFile); // to show progress
 
-      // Actual EPUB render
-      const url = URL.createObjectURL(file);
+      const url = URL.createObjectURL(selectedFile);
       book = ePub(url);
       rendition = book.renderTo("viewer", {
         width: "100%",
@@ -188,27 +222,48 @@
         rendition.display();
       }
 
+      const fontSize = fontSizeSlider.value + "%";
+      rendition.themes.fontSize(fontSize);
+
       rendition.on("relocated", (location) => {
         saveBookmark(location.start.cfi);
       });
 
       book.loaded.navigation.then(nav => {
-        sidebar.innerHTML = "";
+        chapterList.innerHTML = "";
         nav.toc.forEach(chapter => {
           const item = document.createElement("div");
           item.textContent = chapter.label;
           item.className = "chapter";
+          item.dataset.href = chapter.href;
           item.onclick = () => rendition.display(chapter.href);
-          sidebar.appendChild(item);
+          chapterList.appendChild(item);
         });
       });
     });
 
     fontSizeSlider.addEventListener("input", function () {
       const size = this.value + "%";
+      localStorage.setItem("fontSize", this.value);
       if (rendition) {
         rendition.themes.fontSize(size);
       }
+    });
+
+    function nextPage() {
+      if (rendition) rendition.next();
+    }
+
+    function prevPage() {
+      if (rendition) rendition.prev();
+    }
+
+    searchInput.addEventListener("input", function () {
+      const value = this.value.toLowerCase();
+      document.querySelectorAll(".chapter").forEach(el => {
+        const match = el.textContent.toLowerCase().includes(value);
+        el.style.display = match ? "block" : "none";
+      });
     });
   </script>
 
