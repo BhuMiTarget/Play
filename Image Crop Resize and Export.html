@@ -1,408 +1,282 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Fancy Advanced Cropper</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VectorMotion Web</title>
   <style>
+    * { box-sizing: border-box; }
     body {
-      font-family: 'Segoe UI', sans-serif;
       margin: 0;
-      background: #f0f2f5;
-      padding: 20px;
-    }
-    .container {
-      max-width: 1100px;
-      margin: auto;
-      background: white;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-      padding: 20px;
-      border-radius: 12px;
-    }
-    h2 {
-      margin-top: 0;
-      color: #333;
-    }
-    .tools {
       display: flex;
-      flex-wrap: wrap;
-      gap: 15px;
-      margin-bottom: 20px;
-      align-items: center;
+      height: 100vh;
+      font-family: 'Segoe UI', sans-serif;
+      background: #181818;
+      color: #f0f0f0;
     }
-    .tools label {
+    #toolbar {
+      width: 250px;
+      background: #222;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      border-right: 2px solid #333;
+    }
+    #toolbar button, #toolbar input[type="color"], #toolbar input[type="number"] {
+      padding: 8px;
+      background: #333;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #toolbar button:hover {
+      background: #444;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    canvas {
+      flex: 1;
+      background: #fff;
+      cursor: crosshair;
+    }
+    #timeline {
+      background: #111;
+      padding: 5px;
       display: flex;
       align-items: center;
       gap: 5px;
+      border-top: 2px solid #333;
     }
-    .tools input, .tools select, .tools button {
-      padding: 8px 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-    .tools button {
-      background-color: #007bff;
-      color: white;
+    #timeline button, #timeline input[type="number"] {
+      padding: 5px;
+      background: #333;
+      color: #fff;
       border: none;
+      border-radius: 4px;
       cursor: pointer;
-      transition: 0.3s;
     }
-    .tools button:hover {
-      background-color: #0056b3;
-    }
-    #canvasContainer {
-      position: relative;
-      display: inline-block;
-      margin-bottom: 20px;
-    }
-    canvas {
-      max-width: 100%;
-      border: 1px solid #ccc;
-      touch-action: none;
-      border-radius: 6px;
-    }
-    .selection {
-      position: absolute;
-      border: 2px dashed red;
-      pointer-events: none;
-      z-index: 10;
-      display: none;
-    }
-    .preview-box {
-      border: 1px solid #aaa;
-      padding: 10px;
-      margin-top: 10px;
-      max-width: 300px;
-      border-radius: 8px;
-    }
-    .preview-box h4 {
-      margin: 0 0 10px;
+    #timeline button:hover {
+      background: #444;
     }
   </style>
 </head>
 <body>
-
-<div class="container">
-  <h2>Advanced Image Cropper & Resizer</h2>
-
-  <div class="tools">
-    <input type="file" id="fileInput" accept="image/*" />
-    
-    <button onclick="startCrop()">Start Crop</button>
-    <button onclick="cropImage()">Crop</button>
-    <button onclick="cropThenResize()">Crop & Resize</button>
-
-    <label>Aspect:
-      <select id="aspectRatioPreset" onchange="updateAspectPreset()">
-        <option value="free">Free</option>
-        <option value="1:1">1:1</option>
-        <option value="16:9">16:9</option>
-        <option value="4:3">4:3</option>
-        <option value="3:2">3:2</option>
-      </select>
-    </label>
-
-    <label>Resize:
-      <input type="number" id="resizeWidth" value="300" min="10" />
-      ×
-      <input type="number" id="resizeHeight" value="300" min="10" />
-      <select id="resizeUnit">
-        <option value="px">px</option>
-        <option value="mm">mm</option>
-        <option value="cm">cm</option>
-      </select>
-    </label>
-
-    <button onclick="resizeOnly()">Resize Only</button>
-
-    <label>Download as:
-      <select id="formatSelect">
-        <option value="png">PNG</option>
-        <option value="jpeg">JPG</option>
-        <option value="webp">WebP</option>
-        <option value="pdf">PDF</option>
-      </select>
-    </label>
-
-    <button onclick="downloadCroppedImage()">Download</button>
+  <div id="toolbar">
+    <button onclick="setTool('rect')">Rect</button>
+    <button onclick="setTool('circle')">Circle</button>
+    <button onclick="setTool('line')">Line</button>
+    <button onclick="setTool('freehand')">Freehand</button>
+    <input type="color" id="colorPicker" value="#000000">
+    <button onclick="saveFrame()">Save Frame</button>
+    <button onclick="loadFrame()">Load Frame</button>
+    <button onclick="exportSVG()">Export SVG</button>
+    <button onclick="downloadProject()">Download Project</button>
+    <button onclick="uploadProject()">Upload Project</button>
   </div>
-
-  <div id="canvasContainer">
-    <canvas id="imageCanvas"></canvas>
-    <div id="selectionBox" class="selection"></div>
+  <div id="canvas-container">
+    <canvas id="canvas" width="800" height="600"></canvas>
+    <div id="timeline">
+      <button onclick="prevFrame()">◀️</button>
+      <span>Frame: <span id="frameNumber">0</span></span>
+      <button onclick="nextFrame()">▶️</button>
+      <button onclick="togglePlay()">⏯ Play</button>
+      <label>Speed (ms): <input type="number" id="frameDelay" value="500" min="50"></label>
+    </div>
   </div>
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let currentTool = 'rect';
+    let shapesByFrame = [[]];
+    let currentFrame = 0;
+    let isDrawing = false;
+    let startX, startY;
+    let color = document.getElementById('colorPicker').value;
+    let isPlaying = false;
+    let playInterval = null;
 
-  <div class="preview-box" id="previewBox" style="display:none;">
-    <h4>Live Preview</h4>
-    <canvas id="previewCanvas" width="200" height="200"></canvas>
-  </div>
-</div>
+    document.getElementById('colorPicker').addEventListener('input', e => color = e.target.value);
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script>
-  const canvas = document.getElementById("imageCanvas");
-  const ctx = canvas.getContext("2d");
-  const fileInput = document.getElementById("fileInput");
-  const resizeWidth = document.getElementById("resizeWidth");
-  const resizeHeight = document.getElementById("resizeHeight");
-  const resizeUnit = document.getElementById("resizeUnit");
-  const selectionBox = document.getElementById("selectionBox");
-  const aspectPreset = document.getElementById("aspectRatioPreset");
-  const previewCanvas = document.getElementById("previewCanvas");
-  const previewCtx = previewCanvas.getContext("2d");
+    function setTool(tool) {
+      currentTool = tool;
+    }
 
-  let img = new Image();
-  let isCropping = false;
-  let isDragging = false;
-  let croppedCanvas = null;
-  let startX = 0, startY = 0, endX = 0, endY = 0;
-  let aspectRatio = null;
+    canvas.addEventListener('mousedown', (e) => {
+      isDrawing = true;
+      const rect = canvas.getBoundingClientRect();
+      startX = e.clientX - rect.left;
+      startY = e.clientY - rect.top;
+      if (currentTool === 'freehand') {
+        shapesByFrame[currentFrame].push({type: 'freehand', points: [[startX, startY]], color});
+      }
+    });
 
-  fileInput.addEventListener("change", e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      img.onload = () => {
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx.drawImage(img, 0, 0);
-        clearPreview();
+    canvas.addEventListener('mousemove', (e) => {
+      if (!isDrawing) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      if (currentTool === 'freehand') {
+        const shape = shapesByFrame[currentFrame][shapesByFrame[currentFrame].length - 1];
+        shape.points.push([x, y]);
+        draw();
+      }
+    });
+
+    canvas.addEventListener('mouseup', (e) => {
+      if (!isDrawing) return;
+      isDrawing = false;
+      const rect = canvas.getBoundingClientRect();
+      const endX = e.clientX - rect.left;
+      const endY = e.clientY - rect.top;
+
+      if (currentTool !== 'freehand') {
+        shapesByFrame[currentFrame].push({
+          type: currentTool,
+          x: startX,
+          y: startY,
+          x2: endX,
+          y2: endY,
+          color
+        });
+      }
+      draw();
+    });
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (currentFrame > 0) {
+        for (const s of shapesByFrame[currentFrame - 1] || []) {
+          drawShape(s, 0.2);
+        }
+      }
+      for (const shape of shapesByFrame[currentFrame] || []) {
+        drawShape(shape, 1.0);
+      }
+    }
+
+    function drawShape(shape, opacity) {
+      ctx.globalAlpha = opacity;
+      ctx.strokeStyle = shape.color;
+      ctx.fillStyle = shape.color;
+
+      if (shape.type === 'rect') {
+        ctx.strokeRect(shape.x, shape.y, shape.x2 - shape.x, shape.y2 - shape.y);
+      } else if (shape.type === 'circle') {
+        const r = Math.hypot(shape.x2 - shape.x, shape.y2 - shape.y);
+        ctx.beginPath(); ctx.arc(shape.x, shape.y, r, 0, Math.PI * 2); ctx.stroke();
+      } else if (shape.type === 'line') {
+        ctx.beginPath(); ctx.moveTo(shape.x, shape.y); ctx.lineTo(shape.x2, shape.y2); ctx.stroke();
+      } else if (shape.type === 'freehand') {
+        ctx.beginPath();
+        ctx.moveTo(shape.points[0][0], shape.points[0][1]);
+        for (let i = 1; i < shape.points.length; i++) {
+          ctx.lineTo(shape.points[i][0], shape.points[i][1]);
+        }
+        ctx.stroke();
+      }
+
+      ctx.globalAlpha = 1.0;
+    }
+
+    function nextFrame() {
+      currentFrame++;
+      if (!shapesByFrame[currentFrame]) shapesByFrame[currentFrame] = [];
+      document.getElementById('frameNumber').textContent = currentFrame;
+      draw();
+    }
+
+    function prevFrame() {
+      if (currentFrame > 0) currentFrame--;
+      document.getElementById('frameNumber').textContent = currentFrame;
+      draw();
+    }
+
+    function togglePlay() {
+      if (isPlaying) {
+        clearInterval(playInterval);
+        isPlaying = false;
+      } else {
+        const delay = parseInt(document.getElementById('frameDelay').value);
+        isPlaying = true;
+        let f = 0;
+        playInterval = setInterval(() => {
+          currentFrame = f;
+          document.getElementById('frameNumber').textContent = f;
+          draw();
+          f++;
+          if (f >= shapesByFrame.length) f = 0;
+        }, delay);
+      }
+    }
+
+    function exportSVG() {
+      const svgContent = `<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">` +
+        shapesByFrame[currentFrame].map(s => {
+          if (s.type === 'rect') {
+            return `<rect x="${s.x}" y="${s.y}" width="${s.x2 - s.x}" height="${s.y2 - s.y}" fill="none" stroke="${s.color}" />`;
+          } else if (s.type === 'circle') {
+            const r = Math.hypot(s.x2 - s.x, s.y2 - s.y);
+            return `<circle cx="${s.x}" cy="${s.y}" r="${r}" fill="none" stroke="${s.color}" />`;
+          } else if (s.type === 'line') {
+            return `<line x1="${s.x}" y1="${s.y}" x2="${s.x2}" y2="${s.y2}" stroke="${s.color}" />`;
+          } else if (s.type === 'freehand') {
+            return `<polyline points="${s.points.map(p => p.join(",")).join(" ")}" fill="none" stroke="${s.color}" />`;
+          }
+        }).join('') + `</svg>`;
+      const blob = new Blob([svgContent], {type: 'image/svg+xml'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `frame${currentFrame}.svg`;
+      a.click();
+    }
+
+    function saveFrame() {
+      localStorage.setItem('vectormotion', JSON.stringify(shapesByFrame));
+    }
+
+    function loadFrame() {
+      const data = localStorage.getItem('vectormotion');
+      if (data) {
+        shapesByFrame = JSON.parse(data);
+        draw();
+      }
+    }
+
+    function downloadProject() {
+      const blob = new Blob([JSON.stringify(shapesByFrame)], {type: 'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = "vectormotion-project.json";
+      a.click();
+    }
+
+    function uploadProject() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = e => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = evt => {
+          shapesByFrame = JSON.parse(evt.target.result);
+          draw();
+        };
+        reader.readAsText(file);
       };
-      img.src = reader.result;
-    };
-    reader.readAsDataURL(file);
-  });
-
-  function getMouse(e) {
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-    return { x, y };
-  }
-
-  canvas.addEventListener("mousedown", e => {
-    if (!isCropping) return;
-    const pos = getMouse(e);
-    startX = endX = pos.x;
-    startY = endY = pos.y;
-    updateAspectPreset();
-    isDragging = true;
-    drawBox();
-  });
-
-  canvas.addEventListener("mousemove", e => {
-    if (!isCropping || !isDragging) return;
-    const pos = getMouse(e);
-
-    if (aspectRatio) {
-      let w = pos.x - startX;
-      let h = w / aspectRatio;
-
-      if ((pos.y - startY) < 0) h = -Math.abs(h);
-      else h = Math.abs(h);
-
-      endX = startX + w;
-      endY = startY + h;
-    } else {
-      endX = pos.x;
-      endY = pos.y;
-    }
-    drawBox();
-  });
-
-  ["mouseup", "mouseleave"].forEach(event =>
-    canvas.addEventListener(event, () => {
-      if (!isCropping) return;
-      isDragging = false;
-      updatePreview();
-    })
-  );
-
-  canvas.addEventListener("touchstart", e => {
-    if (!isCropping) return;
-    const pos = getMouse(e);
-    startX = endX = pos.x;
-    startY = endY = pos.y;
-    updateAspectPreset();
-    isDragging = true;
-    drawBox();
-  });
-
-  canvas.addEventListener("touchmove", e => {
-    if (!isCropping || !isDragging) return;
-    const pos = getMouse(e);
-
-    if (aspectRatio) {
-      let w = pos.x - startX;
-      let h = w / aspectRatio;
-      if ((pos.y - startY) < 0) h = -Math.abs(h);
-      else h = Math.abs(h);
-      endX = startX + w;
-      endY = startY + h;
-    } else {
-      endX = pos.x;
-      endY = pos.y;
-    }
-    drawBox();
-  });
-
-  canvas.addEventListener("touchend", () => {
-    if (!isCropping) return;
-    isDragging = false;
-    updatePreview();
-  });
-
-  function drawBox() {
-    const x = Math.min(startX, endX);
-    const y = Math.min(startY, endY);
-    const w = Math.abs(endX - startX);
-    const h = Math.abs(endY - startY);
-    selectionBox.style.left = x + "px";
-    selectionBox.style.top = y + "px";
-    selectionBox.style.width = w + "px";
-    selectionBox.style.height = h + "px";
-    selectionBox.style.display = "block";
-  }
-
-  function startCrop() {
-    isCropping = true;
-    selectionBox.style.display = "none";
-    clearPreview();
-  }
-
-  function updateAspectPreset() {
-    const val = aspectPreset.value;
-    if (val === "free") {
-      aspectRatio = null;
-    } else {
-      const [w, h] = val.split(":").map(Number);
-      aspectRatio = w / h;
-    }
-  }
-
-  function convertToPixels(value, unit) {
-    const dpi = 96;
-    if (unit === "px") return value;
-    if (unit === "mm") return value * (dpi / 25.4);
-    if (unit === "cm") return value * (dpi / 2.54);
-  }
-
-  function cropImage() {
-    if (startX === endX || startY === endY) {
-      alert("No area selected to crop!");
-      return;
-    }
-    const x = Math.min(startX, endX);
-    const y = Math.min(startY, endY);
-    const w = Math.abs(endX - startX);
-    const h = Math.abs(endY - startY);
-
-    const outW = convertToPixels(parseFloat(resizeWidth.value), resizeUnit.value);
-    const outH = convertToPixels(parseFloat(resizeHeight.value), resizeUnit.value);
-
-    croppedCanvas = document.createElement("canvas");
-    croppedCanvas.width = outW;
-    croppedCanvas.height = outH;
-    const croppedCtx = croppedCanvas.getContext("2d");
-    croppedCtx.drawImage(canvas, x, y, w, h, 0, 0, outW, outH);
-
-    updatePreview();
-    isCropping = false;
-    selectionBox.style.display = "none";
-  }
-
-  // NEW function: crop THEN resize
-  function cropThenResize() {
-    if (startX === endX || startY === endY) {
-      alert("No area selected to crop!");
-      return;
+      input.click();
     }
 
-    const x = Math.min(startX, endX);
-    const y = Math.min(startY, endY);
-    const w = Math.abs(endX - startX);
-    const h = Math.abs(endY - startY);
-
-    // First crop the original canvas without resizing
-    const tempCanvas = document.createElement("canvas");
-    tempCanvas.width = w;
-    tempCanvas.height = h;
-    const tempCtx = tempCanvas.getContext("2d");
-    tempCtx.drawImage(canvas, x, y, w, h, 0, 0, w, h);
-
-    // Now resize the cropped image to user dimensions
-    const outW = convertToPixels(parseFloat(resizeWidth.value), resizeUnit.value);
-    const outH = convertToPixels(parseFloat(resizeHeight.value), resizeUnit.value);
-
-    croppedCanvas = document.createElement("canvas");
-    croppedCanvas.width = outW;
-    croppedCanvas.height = outH;
-    const croppedCtx = croppedCanvas.getContext("2d");
-
-    croppedCtx.drawImage(tempCanvas, 0, 0, w, h, 0, 0, outW, outH);
-
-    updatePreview();
-    isCropping = false;
-    selectionBox.style.display = "none";
-  }
-
-  function updatePreview() {
-    if (!croppedCanvas) return;
-    const scale = 200 / croppedCanvas.width;
-    previewCanvas.width = 200;
-    previewCanvas.height = croppedCanvas.height * scale;
-    previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
-    previewCtx.drawImage(croppedCanvas, 0, 0, previewCanvas.width, previewCanvas.height);
-    document.getElementById("previewBox").style.display = "block";
-  }
-
-  function clearPreview() {
-    previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
-    document.getElementById("previewBox").style.display = "none";
-  }
-
-  function resizeOnly() {
-    if (!img.src) {
-      alert("Upload an image first.");
-      return;
-    }
-    const outW = convertToPixels(parseFloat(resizeWidth.value), resizeUnit.value);
-    const outH = convertToPixels(parseFloat(resizeHeight.value), resizeUnit.value);
-
-    croppedCanvas = document.createElement("canvas");
-    croppedCanvas.width = outW;
-    croppedCanvas.height = outH;
-    const ctx2 = croppedCanvas.getContext("2d");
-    ctx2.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, outW, outH);
-
-    updatePreview();
-  }
-
-  function downloadCroppedImage() {
-    if (!croppedCanvas) {
-      alert("Nothing to download! Please crop or resize first.");
-      return;
-    }
-    const format = document.getElementById("formatSelect").value;
-
-    if (format === "pdf") {
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF();
-      const imgData = croppedCanvas.toDataURL("image/jpeg");
-      const pdfWidth = 180;
-      const pdfHeight = (croppedCanvas.height / croppedCanvas.width) * pdfWidth;
-      pdf.addImage(imgData, "JPEG", 15, 15, pdfWidth, pdfHeight);
-      pdf.save("cropped-image.pdf");
-    } else {
-      const link = document.createElement("a");
-      link.download = "cropped-image." + format;
-      link.href = croppedCanvas.toDataURL("image/" + format);
-      link.click();
-    }
-  }
-</script>
-
+    // Init default
+    setTool("rect");
+    draw();
+  </script>
 </body>
 </html>
