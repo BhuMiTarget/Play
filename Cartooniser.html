@@ -1,267 +1,665 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>AI Image Tools</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8" />
+  <title>Line Vector Editor - 30 Frame Timeline</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    /* ...Global styles... */
+    :root {
+      --ui: #1f2937;
+      --bg: #0b1220;
+      --panel: #111827;
+      --accent: #10b981;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+    }
+    * { box-sizing: border-box; }
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f5f6fa;
       margin: 0;
-      padding: 0;
-      color: #222b45;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
     }
     header {
-      background: #24292f;
-      color: #fff;
-      padding: 1rem 2rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      padding: 10px 14px;
+      background: linear-gradient(180deg, #0f172a, #0b1220);
+      border-bottom: 1px solid #0d1426;
+      position: sticky; top: 0; z-index: 10;
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
     }
-    main {
-      max-width: 850px;
-      margin: 2rem auto;
-      background: #fff;
+    header h1 {
+      font-size: 16px; font-weight: 600; margin: 0 12px 0 0; color: #c7d2fe;
+    }
+    .btn {
+      background: #111827;
+      color: var(--text);
+      border: 1px solid #1f2937;
       border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-      padding: 2rem;
-    }
-    h1 {
-      margin: 0 0 1rem;
-    }
-    .tools-list {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-      margin-bottom: 2rem;
-    }
-    .tool-card {
-      background: #f9f9fb;
-      border: 1px solid #e1e4e8;
-      border-radius: 6px;
-      padding: 1.8rem 1.4rem 1.4rem 1.4rem;
-      flex: 1 1 270px;
-      min-width: 260px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-      position: relative;
-      transition: box-shadow .18s;
-    }
-    .tool-card:hover {
-      box-shadow: 0 6px 20px rgba(80,70,230,0.08);
-    }
-    .tool-title {
-      font-size: 1.2rem;
-      font-weight: 600;
-      margin: 0 0 .6rem;
-      color: #4f67b6;
-    }
-    .tool-desc {
-      font-size: 1rem;
-      margin-bottom: 1.3rem;
-    }
-    .tool-action-btn {
-      background: #2752e7;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      font-size: 0.98rem;
-      padding: .45rem 1.1rem;
+      padding: 8px 12px;
       cursor: pointer;
-      transition: background .18s;
+      transition: transform .05s ease, background .2s ease, border-color .2s ease;
+      font-weight: 600; font-size: 13px;
     }
-    .tool-action-btn:hover {
-      background: #153da2;
+    .btn:hover { background: #0b1020; border-color: #374151; }
+    .btn:active { transform: translateY(1px); }
+    .btn.accent { background: #0f2f2a; border-color: #0e8f73; color: #8bf7d2; }
+    .btn.warn { background: #231b07; border-color: #7a5a0c; color: #ffd27a; }
+    .btn.danger { background: #2a0f12; border-color: #8f0e19; color: #ff9aa7; }
+    .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .toolbar label { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+    input[type="color"], input[type="number"], input[type="range"] {
+      background: #0c1324; color: #d1d5db; border: 1px solid #1f2937; border-radius: 6px;
+      padding: 6px; height: 32px;
     }
-    @media (max-width:700px) {
-      main {
-        padding: 1rem;
-      }
-      .tools-list {
-        flex-direction: column;
-      }
+    input[type="range"] { height: 6px; padding: 0; }
+    main {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 12px;
+      padding: 12px;
     }
-    /* Modal styles */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 99;
-      left: 0; top: 0; width: 100vw; height: 100vh;
-      background: rgba(36,41,47,0.35);
-      align-items: center;
-      justify-content: center;
+    .panel {
+      background: linear-gradient(180deg, #0d1528, #0a0f1d);
+      border: 1px solid #0f172a;
+      border-radius: 12px;
+      padding: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.02);
     }
-    .modal.active { display: flex; }
-    .modal-content {
-      background: #fff;
-      border-radius: 7px;
-      padding: 1.8rem 2rem 2rem 2rem;
-      min-width: 320px;
-      max-width: 95vw;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    #left {
+      display: grid;
+      gap: 12px;
+      grid-auto-rows: min-content;
+    }
+    .section-title { font-size: 12px; color: #9ca3af; margin: 0 0 8px 0; letter-spacing: .04em; }
+    .tools { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .tool-btn {
+      background: #0b1020; border: 1px solid #1f2937; border-radius: 10px; padding: 10px;
+      text-align: center; cursor: pointer; user-select: none; font-weight: 600; color: #d1d5db;
+    }
+    .tool-btn.active { outline: 2px solid #10b98133; background: #0e172c; }
+    .prop-row { display: flex; align-items: center; justify-content: space-between; margin: 8px 0; gap: 8px; }
+    .prop-row input { width: 110px; }
+    .timeline {
+      display: grid; grid-template-rows: auto 1fr; gap: 8px; height: 220px;
+    }
+    .frames {
+      display: grid;
+      grid-template-columns: repeat(30, 1fr);
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+    }
+    .frame {
+      aspect-ratio: 1/1;
+      min-width: 42px;
+      background: #0b1020;
+      border: 1px solid #1f2937;
+      border-radius: 8px;
       position: relative;
-    }
-    .modal-close {
-      position: absolute;
-      right: 12px; top: 10px;
-      font-size: 1.2rem;
       cursor: pointer;
-      color: #aaa;
+      display: grid; place-items: center;
+      color: #9ca3af;
+      font-size: 11px; font-weight: 700;
     }
-    .modal-close:hover { color: #d11a1a; }
-    .output-img {
-      margin-top: 1.2rem;
-      border-radius: 5px;
-      max-width: 100%;
-      box-shadow: 0 1px 4px rgba(90,70,50,0.04);
+    .frame.active { border-color: #10b981; box-shadow: 0 0 0 2px #10b98133; color: #d1fae5; }
+    .frame.filled::after {
+      content: ""; position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%);
+      width: 8px; height: 8px; border-radius: 50%; background: #10b981aa;
+      box-shadow: 0 0 8px #10b981aa;
     }
-    .loader {
+    #canvasWrap { position: relative; }
+    #canvas {
+      width: 100%; height: 520px; background: radial-gradient(1200px 520px at 50% 50%, #0b1020, #050814 60%, #030612 100%);
+      border: 1px solid #0f172a; border-radius: 12px;
       display: block;
-      margin: 1.5rem auto;
-      width: 38px; height: 38px;
-      border: 4px solid #e1e4e8;
-      border-top: 4px solid #304ffe;
-      border-radius: 50%;
-      animation: spin .8s linear infinite;
     }
-    @keyframes spin { to {transform: rotate(360deg); } }
-    /* File input styling */
-    .file-input {
-      margin-top: 0.7rem;
-      margin-bottom: 1rem;
-    }
+    .help { font-size: 12px; color: #94a3b8; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .spacer { flex: 1; }
+    .kbd { background: #0b1020; border: 1px solid #1f2937; border-radius: 6px; padding: 1px 6px; font-size: 11px; color: #cbd5e1; }
+    .pill { font-size: 11px; color: #9ca3af; padding: 4px 8px; border-radius: 999px; background: #0b1020; border: 1px solid #1f2937; }
   </style>
 </head>
 <body>
   <header>
-    <span style="font-size:1.28rem;font-weight:bold;letter-spacing:0.5px"><span style="font-family:monospace;font-size:1.3rem;color:#bfbcec">AI</span> Image Tools</span>
-    <a href="https://github.com" target="_blank" rel="noopener" style="color:#aabccc;text-decoration:none;font-size:1.3rem">GitHub</a>
+    <h1>Line Vector Editor</h1>
+    <div class="toolbar">
+      <button id="playBtn" class="btn accent">Play</button>
+      <button id="pauseBtn" class="btn">Pause</button>
+      <button id="prevBtn" class="btn">Prev</button>
+      <button id="nextBtn" class="btn">Next</button>
+      <label>FPS <input id="fps" type="number" min="1" max="60" value="12" /></label>
+      <label>Onion <input id="onion" type="range" min="0" max="3" value="1" /></label>
+      <div class="pill">Frames: <span id="frameCount">0</span>/30</div>
+      <div class="spacer"></div>
+      <button id="exportFrames" class="btn warn">Export Frames</button>
+      <button id="clearFrame" class="btn danger">Clear Frame</button>
+    </div>
   </header>
+
   <main>
-    <h1 style="margin-bottom:1.8rem;">AI-powered Tools for Images</h1>
-
-    <div class="tools-list">
-
-      <!-- Cartoonizer Tool -->
-      <div class="tool-card">
-        <div class="tool-title">Image Cartoonizer</div>
-        <div class="tool-desc">Turn photos into cartoon-style images with one click ⋅ fully automatic</div>
-        <button class="tool-action-btn" onclick="openTool('cartoonizer')">Try Cartoonizer</button>
+    <div id="left">
+      <div class="panel">
+        <div class="section-title">Tools</div>
+        <div class="tools">
+          <div class="tool-btn active" data-tool="line">Line</div>
+          <div class="tool-btn" data-tool="select">Select</div>
+        </div>
+        <div class="help" style="margin-top:8px">
+          - Line: click-drag to create a segment. Drag endpoints to adjust. [Canvas line APIs][1][3][4][17][20]
+        </div>
       </div>
 
-      <!-- Upscale Tool -->
-      <div class="tool-card">
-        <div class="tool-title">Upscale <span style="font-size:.95em;color:#4e7ee7;font-weight:normal;">(Super Resolution)</span></div>
-        <div class="tool-desc">Increase image resolution and sharpness with AI, up to 4×</div>
-        <button class="tool-action-btn" onclick="openTool('upscaler')">Try Upscaler</button>
+      <div class="panel">
+        <div class="section-title">Stroke</div>
+        <div class="prop-row">
+          <label>Color</label>
+          <input id="strokeColor" type="color" value="#10b981" />
+        </div>
+        <div class="prop-row">
+          <label>Width</label>
+          <input id="strokeWidth" type="number" min="1" max="20" value="3" />
+        </div>
+        <div class="prop-row">
+          <label>Cap</label>
+          <select id="lineCap">
+            <option>round</option>
+            <option>butt</option>
+            <option>square</option>
+          </select>
+        </div>
+        <div class="prop-row">
+          <label>Join</label>
+          <select id="lineJoin">
+            <option>round</option>
+            <option>miter</option>
+            <option>bevel</option>
+          </select>
+        </div>
       </div>
 
-      <!-- Face Restore Tool -->
-      <div class="tool-card">
-        <div class="tool-title">Face Restore (GFPGAN)</div>
-        <div class="tool-desc">Restore low-res or damaged faces to photo-realistic quality</div>
-        <button class="tool-action-btn" onclick="openTool('face')">Try Face Restore</button>
+      <div class="panel timeline">
+        <div class="row">
+          <div class="section-title" style="margin:0">Timeline (max 30)</div>
+          <div class="spacer"></div>
+          <button id="duplicatePrev" class="btn">Copy Prev</button>
+          <button id="addEmpty" class="btn">Add Empty</button>
+        </div>
+        <div id="frames" class="frames"></div>
       </div>
 
-      <!-- Colorizer Tool -->
-      <div class="tool-card">
-        <div class="tool-title">Image Colorizer</div>
-        <div class="tool-desc">Add natural color to black-and-white & old photos</div>
-        <button class="tool-action-btn" onclick="openTool('colorizer')">Try Colorizer</button>
-      </div>
-    </div>
-
-    <!-- Tool Modals -->
-    <!-- Cartoonizer Modal -->
-    <div class="modal" id="cartoonizer-modal">
-      <div class="modal-content">
-        <span class="modal-close" onclick="closeModal('cartoonizer-modal')">&times;</span>
-        <h2 style="margin-top:0">Image Cartoonizer</h2>
-        <p>Transform your photo into a vibrant cartoon illustration using neural networks.</p>
-        <input class="file-input" type="file" accept="image/*" id="cartoonizer-input">
-        <div id="cartoonizer-loader" style="display:none"><div class="loader"></div></div>
-        <img id="cartoonizer-output" class="output-img" style="display:none">
-      </div>
-    </div>
-
-    <!-- Upscaler Modal -->
-    <div class="modal" id="upscaler-modal">
-      <div class="modal-content">
-        <span class="modal-close" onclick="closeModal('upscaler-modal')">&times;</span>
-        <h2 style="margin-top:0">Image Upscaler</h2>
-        <p>Increase your image resolution (up to 4×) while preserving details.</p>
-        <input class="file-input" type="file" accept="image/*" id="upscaler-input">
-        <div id="upscaler-loader" style="display:none"><div class="loader"></div></div>
-        <img id="upscaler-output" class="output-img" style="display:none">
-      </div>
-    </div>
-
-    <!-- Face Restore Modal -->
-    <div class="modal" id="face-modal">
-      <div class="modal-content">
-        <span class="modal-close" onclick="closeModal('face-modal')">&times;</span>
-        <h2 style="margin-top:0">Face Restore</h2>
-        <p>Restore low-res or blurry faces to photo-realistic quality using GFPGAN.</p>
-        <input class="file-input" type="file" accept="image/*" id="face-input">
-        <div id="face-loader" style="display:none"><div class="loader"></div></div>
-        <img id="face-output" class="output-img" style="display:none">
+      <div class="panel">
+        <div class="section-title">Shortcuts</div>
+        <div class="help">
+          - Hold <span class="kbd">Shift</span> while drawing to lock 45°.<br/>
+          - <span class="kbd">Delete</span>: remove selected segment.<br/>
+          - <span class="kbd">A</span>/<span class="kbd">D</span>: prev/next frame.<br/>
+          - <span class="kbd">Space</span>: play/pause.
+        </div>
       </div>
     </div>
 
-    <!-- Colorizer Modal -->
-    <div class="modal" id="colorizer-modal">
-      <div class="modal-content">
-        <span class="modal-close" onclick="closeModal('colorizer-modal')">&times;</span>
-        <h2 style="margin-top:0">Image Colorizer</h2>
-        <p>Adds realistic color to old black & white photos using deep neural nets.</p>
-        <input class="file-input" type="file" accept="image/*" id="colorizer-input">
-        <div id="colorizer-loader" style="display:none"><div class="loader"></div></div>
-        <img id="colorizer-output" class="output-img" style="display:none">
+    <div id="canvasWrap" class="panel">
+      <canvas id="canvas" width="1280" height="720"></canvas>
+      <div class="help" style="margin-top:8px">
+        Canvas draws straight lines with moveTo/lineTo and stroke; paths are reset per draw cycle[3][4][17].
       </div>
     </div>
   </main>
 
   <script>
-    // Modal handlers
-    function openTool(tool) {
-      document.getElementById(tool + '-modal').classList.add('active');
+    // Data structures
+    const MAX_FRAMES = 30;
+    const frames = Array.from({length: MAX_FRAMES}, () => ({ lines: [] }));
+    let currentFrame = 0;
+
+    // UI elements
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const framesEl = document.getElementById('frames');
+    const frameCountEl = document.getElementById('frameCount');
+
+    // Toolbar
+    const playBtn = document.getElementById('playBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const prevBtn = document.getElementById('prevBtn');
+    const fpsEl = document.getElementById('fps');
+    const onionEl = document.getElementById('onion');
+    const exportBtn = document.getElementById('exportFrames');
+    const clearFrameBtn = document.getElementById('clearFrame');
+    const duplicatePrevBtn = document.getElementById('duplicatePrev');
+    const addEmptyBtn = document.getElementById('addEmpty');
+
+    // Stroke controls
+    const colorEl = document.getElementById('strokeColor');
+    const widthEl = document.getElementById('strokeWidth');
+    const lineCapEl = document.getElementById('lineCap');
+    const lineJoinEl = document.getElementById('lineJoin');
+
+    // Tools
+    let tool = 'line';
+    const toolBtns = document.querySelectorAll('.tool-btn');
+    toolBtns.forEach(b => b.addEventListener('click', () => {
+      toolBtns.forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      tool = b.dataset.tool;
+      selection = null;
+      draw();
+    }));
+
+    // State for drawing/selecting
+    let isDrawing = false;
+    let startPoint = null; // {x,y}
+    let hoverInfo = null; // {type, lineIndex, endpoint:'a'|'b'}
+    let selection = null; // {type:'line'|'endpoint', lineIndex, endpoint}
+
+    // Playback
+    let playing = false;
+    let rafId = null;
+    let lastTime = 0;
+
+    function dprSetup() {
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      draw();
     }
-    function closeModal(id) {
-      document.getElementById(id).classList.remove('active');
+    new ResizeObserver(dprSetup).observe(canvas);
+
+    // Frame UI
+    function makeFrameButtons() {
+      framesEl.innerHTML = '';
+      for (let i = 0; i < MAX_FRAMES; i++) {
+        const btn = document.createElement('div');
+        btn.className = 'frame';
+        btn.textContent = i+1;
+        if (frames[i].lines.length) btn.classList.add('filled');
+        if (i === currentFrame) btn.classList.add('active');
+        btn.addEventListener('click', () => {
+          currentFrame = i;
+          selection = null;
+          updateFramesUI();
+          draw();
+        });
+        framesEl.appendChild(btn);
+      }
+      updateFramesUI();
+    }
+    function updateFramesUI() {
+      frameCountEl.textContent = frames.filter(f => f.lines.length>0).length;
+      const children = framesEl.children;
+      for (let i=0;i<children.length;i++) {
+        children[i].classList.toggle('active', i===currentFrame);
+        children[i].classList.toggle('filled', frames[i].lines.length>0);
+      }
     }
 
-    // Helper: read file and show "processing" (since demo, only simulates)
-    function simulateTool(inputId, loaderId, outputId, effect) {
-      let input = document.getElementById(inputId);
-      input.onchange = function(e) {
-        const file = input.files[0];
-        if (file) {
-          // Show loader
-          document.getElementById(loaderId).style.display = 'block';
-          document.getElementById(outputId).style.display = 'none';
+    // Helpers
+    function getMousePos(e) {
+      const r = canvas.getBoundingClientRect();
+      return { x: e.clientX - r.left, y: e.clientY - r.top };
+    }
+    function dist(a,b){ const dx=a.x-b.x, dy=a.y-b.y; return Math.hypot(dx,dy); }
+    function snap45(a,b,shift) {
+      if (!shift) return b;
+      const dx=b.x-a.x, dy=b.y-a.y;
+      const angle = Math.atan2(dy,dx);
+      const snap = Math.round(angle/(Math.PI/4))*(Math.PI/4);
+      const len = Math.hypot(dx,dy);
+      return { x: a.x + Math.cos(snap)*len, y: a.y + Math.sin(snap)*len };
+    }
 
-          // Simulate processing delay and display preview
-          const reader = new FileReader();
-          reader.onload = function(ev) {
-            setTimeout(() => {
-              document.getElementById(loaderId).style.display = 'none';
-              document.getElementById(outputId).src = ev.target.result;
-              document.getElementById(outputId).style.display = 'block';
-              // NOTE: No AI applied in demo; in production, call API here
-            }, 1200 + Math.random()*800); // simulate 1-2s AI processing
-          };
-          reader.readAsDataURL(file);
+    function drawLineSegment(line, style, alpha=1) {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.lineWidth = style.width;
+      ctx.strokeStyle = style.color;
+      ctx.lineCap = style.cap;
+      ctx.lineJoin = style.join;
+      ctx.beginPath();
+      ctx.moveTo(line.a.x, line.a.y);
+      ctx.lineTo(line.b.x, line.b.y);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawHandle(p, selected=false) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.fillStyle = selected ? '#f59e0b' : '#10b981';
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 2;
+      ctx.arc(p.x, p.y, 6, 0, Math.PI*2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawOnionSkins() {
+      const depth = Number(onionEl.value);
+      if (depth<=0) return;
+      const baseStyle = currentStyle();
+      for (let i=1;i<=depth;i++) {
+        const prevIdx = currentFrame - i;
+        if (prevIdx>=0) {
+          frames[prevIdx].lines.forEach(line=>{
+            drawLineSegment(line, {...baseStyle, color:'#6b7280'}, 0.25);
+          });
         }
+      }
+    }
+
+    function currentStyle() {
+      return {
+        color: colorEl.value,
+        width: Number(widthEl.value),
+        cap: lineCapEl.value,
+        join: lineJoinEl.value
       };
     }
 
-    // Wire up all tool demos except "background remover"
-    simulateTool('cartoonizer-input','cartoonizer-loader','cartoonizer-output','cartoonize');
-    simulateTool('upscaler-input','upscaler-loader','upscaler-output','upscale');
-    simulateTool('face-input','face-loader','face-output','face');
-    simulateTool('colorizer-input','colorizer-loader','colorizer-output','colorize');
+    function draw() {
+      // clear
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      // onion
+      drawOnionSkins();
+      // lines
+      const style = currentStyle();
+      frames[currentFrame].lines.forEach((line, idx)=>{
+        const isSel = selection && selection.type==='line' && selection.lineIndex===idx;
+        const isHover = hoverInfo && hoverInfo.type==='line' && hoverInfo.lineIndex===idx;
+        drawLineSegment(line, style, isSel?1:1);
+        // endpoints and hover
+        const selA = selection && selection.type==='endpoint' && selection.lineIndex===idx && selection.endpoint==='a';
+        const selB = selection && selection.type==='endpoint' && selection.lineIndex===idx && selection.endpoint==='b';
+        const hovA = hoverInfo && hoverInfo.type==='endpoint' && hoverInfo.lineIndex===idx && hoverInfo.endpoint==='a';
+        const hovB = hoverInfo && hoverInfo.type==='endpoint' && hoverInfo.lineIndex===idx && hoverInfo.endpoint==='b';
+
+        drawHandle(line.a, selA || hovA);
+        drawHandle(line.b, selB || hovB);
+      });
+
+      // drawing preview
+      if (isDrawing && startPoint) {
+        ctx.save();
+        ctx.setLineDash([6,6]);
+        const m = lastMouse || startPoint;
+        const previewEnd = snap45(startPoint, m, shiftDown);
+        ctx.strokeStyle = '#60a5fa';
+        ctx.lineWidth = currentStyle().width;
+        ctx.beginPath();
+        ctx.moveTo(startPoint.x, startPoint.y);
+        ctx.lineTo(previewEnd.x, previewEnd.y);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    // Mouse interactions
+    let draggingEndpoint = null;
+    let draggingLine = null;
+    let lastMouse = null;
+    let shiftDown = false;
+    window.addEventListener('keydown', e=>{
+      if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') { shiftDown = true; }
+      if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+      if (e.key === 'a' || e.key === 'A') { gotoPrev(); }
+      if (e.key === 'd' || e.key === 'D') { gotoNext(); }
+      if (e.key === 'Delete' || e.key === 'Backspace') { deleteSelection(); }
+    });
+    window.addEventListener('keyup', e=>{
+      if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') { shiftDown = false; }
+    });
+
+    function hoverHitTest(p) {
+      const lines = frames[currentFrame].lines;
+      // endpoints first
+      for (let i=lines.length-1;i>=0;i--) {
+        const l = lines[i];
+        if (dist(p, l.a) <= 8) return { type:'endpoint', lineIndex:i, endpoint:'a' };
+        if (dist(p, l.b) <= 8) return { type:'endpoint', lineIndex:i, endpoint:'b' };
+      }
+      // near-line hit test
+      for (let i=lines.length-1;i>=0;i--) {
+        const l = lines[i];
+        const d = pointToSegmentDistance(p,l.a,l.b);
+        if (d <= 6) return { type:'line', lineIndex:i };
+      }
+      return null;
+    }
+
+    function pointToSegmentDistance(p, a, b) {
+      // http://stackoverflow.com/a/1501725/1420197
+      const dx = b.x - a.x, dy = b.y - a.y;
+      if (dx===0 && dy===0) return dist(p,a);
+      const t = ((p.x-a.x)*dx + (p.y-a.y)*dy) / (dx*dx + dy*dy);
+      const clamped = Math.max(0, Math.min(1, t));
+      const proj = { x: a.x + clamped*dx, y: a.y + clamped*dy };
+      return dist(p, proj);
+    }
+
+    canvas.addEventListener('mousemove', e=>{
+      const m = getMousePos(e);
+      lastMouse = m;
+      if (tool==='line') {
+        if (draggingEndpoint) {
+          // Move endpoint
+          const { lineIndex, endpoint } = draggingEndpoint;
+          const other = frames[currentFrame].lines[lineIndex][endpoint==='a'?'b':'a'];
+          const snapped = snap45(other, m, shiftDown);
+          frames[currentFrame].lines[lineIndex][endpoint] = snapped;
+          draw();
+          updateFramesUI();
+          return;
+        }
+        if (isDrawing && startPoint) {
+          draw(); // preview handled in draw()
+          return;
+        }
+        hoverInfo = hoverHitTest(m);
+        draw();
+      } else if (tool==='select') {
+        if (draggingLine) {
+          const { lineIndex, offset } = draggingLine;
+          frames[currentFrame].lines[lineIndex].a = { x: m.x - offset.dxA, y: m.y - offset.dyA };
+          frames[currentFrame].lines[lineIndex].b = { x: m.x - offset.dxB, y: m.y - offset.dyB };
+          draw();
+          return;
+        }
+        hoverInfo = hoverHitTest(m);
+        draw();
+      }
+    });
+
+    canvas.addEventListener('mousedown', e=>{
+      const m = getMousePos(e);
+      if (tool==='line') {
+        hoverInfo = hoverHitTest(m);
+        // begin new line if not on endpoint
+        if (!hoverInfo || hoverInfo.type==='line') {
+          isDrawing = true;
+          startPoint = m;
+          selection = null;
+          draw();
+          return;
+        }
+        // drag endpoint
+        if (hoverInfo.type==='endpoint') {
+          draggingEndpoint = { lineIndex: hoverInfo.lineIndex, endpoint: hoverInfo.endpoint };
+          selection = { type:'endpoint', lineIndex: hoverInfo.lineIndex, endpoint: hoverInfo.endpoint };
+          draw();
+          return;
+        }
+      } else if (tool==='select') {
+        hoverInfo = hoverHitTest(m);
+        if (hoverInfo) {
+          if (hoverInfo.type==='line') {
+            const l = frames[currentFrame].lines[hoverInfo.lineIndex];
+            draggingLine = {
+              lineIndex: hoverInfo.lineIndex,
+              offset: { dxA: m.x - l.a.x, dyA: m.y - l.a.y, dxB: m.x - l.b.x, dyB: m.y - l.b.y }
+            };
+            selection = { type:'line', lineIndex: hoverInfo.lineIndex };
+          } else if (hoverInfo.type==='endpoint') {
+            draggingEndpoint = { lineIndex: hoverInfo.lineIndex, endpoint: hoverInfo.endpoint };
+            selection = { type:'endpoint', lineIndex: hoverInfo.lineIndex, endpoint: hoverInfo.endpoint };
+          }
+          draw();
+          return;
+        } else {
+          selection = null;
+          draw();
+        }
+      }
+    });
+
+    canvas.addEventListener('mouseup', e=>{
+      const m = getMousePos(e);
+      if (tool==='line') {
+        if (draggingEndpoint) {
+          draggingEndpoint = null;
+          return;
+        }
+        if (isDrawing && startPoint) {
+          const end = snap45(startPoint, m, shiftDown);
+          if (dist(startPoint, end) > 2) {
+            frames[currentFrame].lines.push({
+              a: startPoint, b: end,
+              style: currentStyle()
+            });
+            updateFramesUI();
+          }
+          isDrawing = false; startPoint = null;
+          draw();
+        }
+      } else if (tool==='select') {
+        draggingLine = null;
+        draggingEndpoint = null;
+      }
+    });
+
+    canvas.addEventListener('mouseleave', ()=>{
+      draggingLine = null;
+      draggingEndpoint = null;
+      isDrawing = false;
+      startPoint = null;
+      hoverInfo = null;
+      draw();
+    });
+
+    function deleteSelection() {
+      if (!selection) return;
+      const lines = frames[currentFrame].lines;
+      if (selection.type==='line' || selection.type==='endpoint') {
+        lines.splice(selection.lineIndex,1);
+        selection = null;
+        updateFramesUI();
+        draw();
+      }
+    }
+
+    // Playback
+    function togglePlay() {
+      if (playing) { stop(); } else { play(); }
+    }
+    function play() {
+      if (playing) return;
+      playing = true;
+      lastTime = performance.now();
+      playBtn.textContent = 'Playing...';
+      loop();
+    }
+    function stop() {
+      playing = false;
+      playBtn.textContent = 'Play';
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+    function loop(now) {
+      if (!playing) return;
+      const fps = Math.max(1, Math.min(60, Number(fpsEl.value)||12));
+      const frameDuration = 1000 / fps;
+      const t = performance.now();
+      if (t - lastTime >= frameDuration) {
+        lastTime = t;
+        gotoNext(true);
+      }
+      rafId = requestAnimationFrame(loop);
+    }
+
+    function gotoNext(isPlaying=false) {
+      currentFrame = (currentFrame + 1) % MAX_FRAMES;
+      selection = null;
+      updateFramesUI();
+      draw();
+      if (!isPlaying) stop();
+    }
+    function gotoPrev() {
+      currentFrame = (currentFrame - 1 + MAX_FRAMES) % MAX_FRAMES;
+      selection = null;
+      updateFramesUI();
+      draw();
+    }
+
+    // Buttons
+    playBtn.addEventListener('click', play);
+    pauseBtn.addEventListener('click', stop);
+    nextBtn.addEventListener('click', ()=>gotoNext(false));
+    prevBtn.addEventListener('click', gotoPrev);
+    [colorEl, widthEl, lineCapEl, lineJoinEl, onionEl].forEach(el=>el.addEventListener('input', draw));
+
+    clearFrameBtn.addEventListener('click', ()=>{
+      frames[currentFrame].lines = [];
+      selection = null;
+      updateFramesUI();
+      draw();
+    });
+
+    duplicatePrevBtn.addEventListener('click', ()=>{
+      if (currentFrame===0) return;
+      frames[currentFrame].lines = frames[currentFrame-1].lines.map(l=>({
+        a: {...l.a}, b: {...l.b}, style: {...l.style}
+      }));
+      updateFramesUI();
+      draw();
+    });
+
+    addEmptyBtn.addEventListener('click', ()=>{
+      // move to next frame if not at last
+      if (currentFrame < MAX_FRAMES-1) {
+        currentFrame += 1;
+        selection = null;
+        updateFramesUI();
+        draw();
+      }
+    });
+
+    exportBtn.addEventListener('click', ()=>{
+      // Export each frame to PNG data URL list
+      const exported = [];
+      const savedIdx = currentFrame;
+      const bg = '#00000000'; // transparent
+      const prevFill = ctx.fillStyle;
+      for (let i=0;i<MAX_FRAMES;i++) {
+        currentFrame = i;
+        draw();
+        exported.push(canvas.toDataURL('image/png'));
+      }
+      currentFrame = savedIdx;
+      draw();
+      console.log('Exported frame data URLs:', exported);
+      alert('Exported '+exported.length+' frames to console as data URLs.\nUse them to assemble GIF/MP4 server-side or client-side.');
+    });
+
+    // Init
+    makeFrameButtons();
+    dprSetup();
+    draw();
   </script>
 </body>
 </html>
