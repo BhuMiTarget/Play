@@ -115,7 +115,7 @@
         <div class="Nav">
           <div class="left">
             <button id="btnRestart" class="ghost">Restart</button>
-            <button id="btnDownload" class="ghost">Download CSV</button>
+            <button id="btnDownload" class="ghost">Share Response (HTML)</button>
           </div>
           <div class="right">
             <button id="btnRetake" class="btn">Retake</button>
@@ -144,8 +144,7 @@
       timerMinutes: 30
     };
 
-    // Questions (from attached PDF) and Answer Key mapping (1..50)
-    // Format: { q: "text", opts: ["A) ...","B) ...","C) ...","D) ..."], ans: "A" }
+    // Questions and Answer Key (from attached PDF answer key)
     const QA = [
       {q:"1. किनकी 300वीं जयंती पर 300 रुपये का स्मारक सिक्का और डाक टिकट जारी किया गया?", opts:["A) गुरू रामदास","B) देवी अहिल्याबाई होल्कर","C) छत्रपति शिवाजी महाराज","D) पंडिता रमाबाई"], ans:"B"},
       {q:"2. मई 2025 में 'उल्लास-नवभारत साक्षरता कार्यक्रम' के तहत किस राज्य ने खुद को पूर्ण साक्षर राज्य घोषित किया?", opts:["A) केरल","B) मेघालय","C) गोवा","D) तमिलनाडु"], ans:"C"},
@@ -198,7 +197,6 @@
       {q:"49. 'वंदे गंगा जल संरक्षण अभियान' किस राज्य ने शुरू किया?", opts:["A) हरियाणा","B) राजस्थान","C) मध्य प्रदेश","D) छत्तीसगढ़"], ans:"B"},
       {q:"50. CII का अध्यक्ष किसे नियुक्त किया गया?", opts:["A) एस महेन्द्र देव","B) अरुण श्रीनिवास","C) शैलेश सी. मेहता","D) राजीव मेमानी"], ans:"D"}
     ];
-    // The above mapping follows the Answer Key embedded on the last page of the provided PDF attachment[1].
 
     // State
     let order = [...Array(QA.length).keys()];
@@ -234,7 +232,6 @@
 
     function init() {
       totalCountEl.textContent = QA.length;
-      // Load persisted attempt if present
       const saved = JSON.parse(localStorage.getItem('lan_exam_state') || 'null');
       if (saved && saved.Q === QA.length) {
         answers = saved.answers || answers;
@@ -276,7 +273,7 @@
         div.appendChild(span);
         if (answers[idx] === optCode) div.classList.add('selected');
 
-        div.addEventListener('click', (e) => {
+        div.addEventListener('click', () => {
           answers[idx] = optCode;
           persist();
           renderSelectionStyles();
@@ -300,7 +297,6 @@
 
     function next() {
       if (!submitted && current === QA.length-1) {
-        // Submit
         submitExam();
         return;
       }
@@ -399,25 +395,115 @@
 
     function retake() { restart(false); }
 
-    function downloadCSV() {
-      const {details, correct, total} = scoreExam();
-      const rows = [
-        ['Q#','Question','Chosen','Correct','Result'],
-        ...details.map(d=>[d.display, csvEscape(d.q), d.chosen||'', d.ans, d.isCorrect?'Correct':'Wrong']),
-        [],
-        ['Score', `${correct}/${total}`]
-      ];
-      const csv = rows.map(r=>r.map(csvCell).join(',')).join('\n');
-      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    // NEW: Build shareable HTML and trigger Android Share Sheet when possible.
+    async function downloadHTMLorShare() {
+      const {details, correct, total, attempted} = (() => {
+        const r = scoreExam();
+        return {...r, attempted: r.details.filter(d=>d.chosen).length};
+      })();
+
+      const title = 'Exam Response';
+      const style = `
+        body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;margin:0;background:#f7f7fb;color:#1f2937}
+        .wrap{max-width:900px;margin:24px auto;padding:16px}
+        .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:14px}
+        .hdr{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+        .badge{font-size:12px;padding:3px 8px;border-radius:999px;background:#f3f4f6;border:1px solid #e5e7eb;color:#374151}
+        .opt{display:flex;gap:8px;align-items:flex-start;padding:10px;border:2px solid #e5e7eb;border-radius:10px;margin-top:8px}
+        .correct{border-color:#16a34a;background:#ecfdf5}
+        .wrong{border-color:#dc2626;background:#fef2f2}
+        .muted{color:#6b7280}
+        h1{font-size:20px;margin:0 0 6px 0}
+        .score{font-weight:700;color:#16a34a}
+      `;
+      const safe = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+      const itemsHTML = details.map(d=>{
+        const opts = d.opts.map((t,i)=>{
+          const code = ['A','B','C','D'][i];
+          const classes = [
+            'opt',
+            d.ans===code ? 'correct' : '',
+            d.chosen && d.chosen===code && d.ans!==code ? 'wrong' : ''
+          ].filter(Boolean).join(' ');
+          const mark = d.chosen===code ? 'checked' : '';
+          return `<div class="${classes}">
+            <input type="radio" disabled ${mark} />
+            <span>${safe(t)}</span>
+          </div>`;
+        }).join('');
+        const resultLine = d.isCorrect
+          ? '<span style="color:#16a34a">Correct</span>'
+          : `<span style="color:#dc2626">Wrong</span> -  Correct: <strong>${d.ans}</strong>`;
+        return `
+          <div class="card">
+            <div class="hdr"><span class="badge">Q${d.display}</span></div>
+            <div style="margin-bottom:8px">${safe(d.q)}</div>
+            <div>${opts}</div>
+            <div style="margin-top:8px" class="muted">${resultLine}</div>
+          </div>
+        `;
+      }).join('');
+
+      const summary = `
+        <div class="card">
+          <h1>${safe(document.querySelector('.brand')?.textContent || 'Exam')}</h1>
+          <div>Score: <span class="score">${correct}/${total}</span></div>
+          <div class="muted">Attempted: ${attempted}/${total} -  Skipped: ${total - attempted}</div>
+          <div class="muted">Generated: ${new Date().toLocaleString()}</div>
+        </div>
+      `;
+
+      const htmlDoc = `
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>${safe(title)}</title>
+<style>${style}</style>
+</head>
+<body>
+  <div class="wrap">
+    ${summary}
+    ${itemsHTML}
+  </div>
+</body>
+</html>`.trim();
+
+      // Build a Blob and File for sharing
+      const blob = new Blob([htmlDoc], {type:'text/html;charset=utf-8'});
+      // Prefer application/xhtml+xml for some share targets, but many accept text/html
+      const preferredMime = 'text/html';
+      let file;
+      try {
+        file = new File([blob], 'exam-response.html', {type: preferredMime});
+      } catch (e) {
+        // Safari/iOS older may not support File constructor; fallback to Blob-only for download
+        file = null;
+      }
+
+      const shareSupported = !!navigator.share && !!navigator.canShare;
+      // Try Web Share API with files if possible
+      if (shareSupported && file) {
+        const data = { files: [file], title: 'Exam Response', text: 'Exam response (HTML)' };
+        try {
+          if (navigator.canShare(data)) {
+            await navigator.share(data); // Triggers Android native share sheet with the HTML file
+            return;
+          }
+        } catch (err) {
+          // If user cancels or share fails, fall through to download
+          // AbortError means user canceled; we just exit silently to download
+        }
+      }
+
+      // Fallback: download the HTML file
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = 'results.csv';
+      a.download = 'exam-response.html';
       a.click();
-    }
-    function csvEscape(s){ return (s||'').replace(/\n/g,' ').replace(/\s+/g,' ').trim(); }
-    function csvCell(s){
-      const t = String(s??'');
-      return `"${t.replace(/"/g,'""')}"`;
+      URL.revokeObjectURL(a.href);
     }
 
     function shuffle(arr){
@@ -470,7 +556,8 @@
     btnClear.addEventListener('click', clearChoice);
     btnRestart.addEventListener('click', ()=>restart(true));
     btnRetake.addEventListener('click', retake);
-    btnDownload.addEventListener('click', downloadCSV);
+    // Updated: Share Response (HTML)
+    btnDownload.addEventListener('click', downloadHTMLorShare);
     toggleTimer.addEventListener('change', (e)=>{
       if (e.target.checked){ startTimer(); } else { stopTimer(true); }
     });
@@ -479,11 +566,9 @@
       flash(config.shuffleQuestions?'Shuffle on':'Shuffle off');
     });
 
-    // Apply initial shuffle based on config
     if (config.shuffleQuestions) shuffle(order);
-
     init();
   </script>
-  <!-- Questions and answer key sourced from the attached PDF file's content and its final answer key page[1]. -->
+  <!-- Web Share API is used to trigger Android's native share sheet when supported; falls back to download otherwise[2][3][7][13]. -->
 </body>
 </html>
