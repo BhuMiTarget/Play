@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>BPSC Test 4 — Answers (One per screen)</title>
+  <style>
+    :root{
+      --bg:#0f1115; --card:#171a21; --text:#e8edf3; --muted:#aab3be;
+      --accent:#4da3ff; --accent2:#84f7c5; --btn:#232734; --btn2:#2c3141; --focus:#ffd166;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+    .app{min-height:100%;display:flex;flex-direction:column;gap:12px;padding:16px}
+    header{display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .title{font-weight:700;font-size:clamp(16px,2.4vw,22px)}
+    .subtitle{color:var(--muted);font-size:clamp(12px,2vw,14px)}
+    .deck{position:relative;flex:1;min-height:60vh;max-width:1100px;margin:0 auto;width:100%;
+      background:var(--card);border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.35);overflow:hidden}
+    .slide{position:absolute;inset:0;padding:24px 22px;overflow:auto;opacity:0;pointer-events:none;transition:opacity .2s ease}
+    .slide.active{opacity:1;pointer-events:auto}
+    .qtag{display:inline-block;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0a1222;
+      font-weight:800;padding:6px 10px;border-radius:999px;font-size:13px;letter-spacing:.3px;margin-bottom:10px}
+    h2{margin:6px 0 12px;font-size:clamp(18px,2.6vw,26px)}
+    .content{white-space:pre-wrap;font-size:clamp(14px,2.2vw,18px);line-height:1.55}
+    .nav{max-width:1100px;margin:0 auto;width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .btn{appearance:none;border:none;background:var(--btn);color:var(--text);padding:10px 14px;border-radius:10px;
+      font-weight:600;cursor:pointer;transition:background .2s ease,transform .05s ease;display:inline-flex;gap:8px;align-items:center}
+    .btn:hover{background:var(--btn2)} .btn:active{transform:translateY(1px)} .btn:focus{outline:2px solid var(--focus);outline-offset:2px}
+    .counter{color:var(--muted);font-variant-numeric:tabular-nums}
+    .kbd{background:#0b0d12;border:1px solid #2f3442;padding:2px 6px;border-radius:6px;font-family:ui-monospace,Consolas,Menlo,monospace}
+    @media (max-width:720px){ .slide{padding:18px} }
+  </style>
+</head>
+<body>
+  <div class="app" role="application" aria-label="BPSC Answers slideshow">
+    <header>
+      <div class="title">BPSC Test 4 — Answers</div>
+      <div class="subtitle">One answer per screen • Use ← → or buttons</div>
+    </header>
+
+    <div class="deck" id="deck" aria-live="polite">
+
+      <!-- Q1 -->
+      <section class="slide active" id="slide-1" role="group" aria-roledescription="slide" aria-label="Question 1">
+        <div class="qtag">Q1 • Answer: A</div>
+        <h2>Explanation</h2>
+        <div class="content">• Statement 1 is correct: The Satavahana dynasty was founded by Simuka. In the Satavahanas’ Naneghat inscription, Simuka is listed first in the royal genealogy as king.
+• Statement 2 is correct: The capital of this dynasty was Pratishthana (Paithan).
+• Statement 3 is not correct: Gautamiputra Satakarni is regarded as the destroyer of the Sakas, Pahlavas, and Yavanas.
+• Additional note: The Satavahana dynasty reached its peak during the reign of Gautamiputra Satakarni.</div>
+      </section>
+
+      <!-- Q2 -->
+      <section class="slide" id="slide-2" role="group" aria-roledescription="slide" aria-label="Question 2">
+        <div class="qtag">Q2 • Answer: D</div>
+        <h2>Explanation</h2>
+        <div class="content">Dynasty — Capital
+1. Pandya — Madurai
+2. Pallava — Kanchipuram
+3. Kadamba — Banavasi
+4. Western Ganga — Kolar</div>
+      </section>
+
+      <!-- Q3 -->
+      <section class="slide" id="slide-3" role="group" aria-roledescription="slide" aria-label="Question 3">
+        <div class="qtag">Q3 • Answer: B</div>
+        <h2>Explanation</h2>
+        <div class="content">• Statements 1 and 3 are correct: The Sthaviras were conservative and upheld traditional beliefs, while the Mahasanghikas supported change.
+• Statement 2 is incorrect: The Sthaviras were led by Mahakaccayana and the Mahasanghikas by Mahakassapa (the pairing given in the prompt was swapped).
+• Statement 4 is correct: During the Fourth Buddhist Council at Kundalavana (Kashmir), Buddhism formally split into Hinayana (Lesser Vehicle) and Mahayana (Great Vehicle).</div>
+      </section>
+
+      <!-- Q4 -->
+      <section class="slide" id="slide-4" role="group" aria-roledescription="slide" aria-label="Question 4">
+        <div class="qtag">Q4 • Answer: B</div>
+        <h2>Explanation</h2>
+        <div class="content">Author — Book
+• Kautilya — Arthashastra
+• Panini — Ashtadhyayi
+• Kamandaka — Nitisara (contains many parallels with Kautilya’s Arthashastra; translated into Telugu by Jakkaraju Venkata Kavi)
+• Kalidasa — Kumarasambhavam, Raghuvamsha, Meghaduta, Abhijnana Shakuntalam, Malavikagnimitram, Vikramorvashiyam</div>
+      </section>
+
+      <!-- Q5 -->
+      <section class="slide" id="slide-5" role="group" aria-roledescription="slide" aria-label="Question 5">
+        <div class="qtag">Q5 • Answer: C</div>
+        <h2>Explanation</h2>
+        <div class="content">• Statement 1 is incorrect: Vikramashila University was located at present Antichak village near Kahalgaon in Bhagalpur district, Bihar.
+• Statement 2 is incorrect in the prompt’s flow but the correct fact: Vikramashila University was founded by the Pala ruler Dharmapala.
+• Statement 3 is correct: It was a center of Vajrayana with Tantric masters like Buddhajnanapada, Dipankarabhadra, and Jayabhadra; Jayabhadra was the first major commentator on the Chakrasamvara Tantra.
+• Statement 4 is correct: Along with Tantric practice, subjects such as astronomy, logic, law, grammar, and philosophy were taught.
+• It was destroyed around 1193 by Muhammad bin Bakhtiyar Khalji.</div>
+      </section>
+
+      <!-- Q6 -->
+      <section class="slide" id="slide-6" role="group" aria-roledescription="slide" aria-label="Question 6">
+        <div class="qtag">Q6 • Answer: A</div>
+        <h2>Explanation</h2>
+        <div class="content">Jainism is an ancient religion teaching the path of liberation and spiritual purity. The word “Jain” derives from “Jina,” meaning “conqueror.” Founders are called Tirthankaras; Jain ascetics are called Nirgranthas. There are 24 Tirthankaras: Rishabhadeva is the first and Lord Mahavira the last.</div>
+      </section>
+
+      <!-- Q7 -->
+      <section class="slide" id="slide-7" role="group" aria-roledescription="slide" aria-label="Question 7">
+        <div class="qtag">Q7 • Answer: B</div>
+        <h2>Explanation</h2>
+        <div class="content">Tamilakam polities and emblems:
+• Chera: Ruled the western hill tracts; emblem was the bow; capital Vanchi (Karur).
+• Chola: Controlled the fully irrigated, fertile Kaveri basin; emblem was the tiger; capital Uraiyur.
+• Pandya: Ruled rural and coastal tracts from capital Madurai; emblem was the fish.</div>
+      </section>
+
+      <!-- Q8 -->
+      <section class="slide" id="slide-8" role="group" aria-roledescription="slide" aria-label="Question 8">
+        <div class="qtag">Q8 • Answer: D</div>
+        <h2>Explanation</h2>
+        <div class="content">• Statement 1 is correct: Vima Kadphises, son of Kujula Kadphises, issued gold coins in India for regular use.
+• Statement 2 is correct: Copper coins of Kujula Kadphises are found south of the Hindu Kush, indicating the Kushan movement into the Indian subcontinent began in his time.
+• Statement 3 is correct: Ashvaghosha was a court poet of Kanishka and authored Buddhacharita and Saundarananda.</div>
+      </section>
+
+      <!-- Q9 -->
+      <section class="slide" id="slide-9" role="group" aria-roledescription="slide" aria-label="Question 9">
+        <div class="qtag">Q9 • Answer: D</div>
+        <h2>Explanation</h2>
+        <div class="content">• Statement 1 is correct: The Sarnath pillar was erected by Ashoka in the 3rd century BCE.
+• Statement 2 is correct: The capital has three parts—(1) a lotus base (Buddhist symbol), (2) an abacus drum with four animals (bull-east, horse-west, elephant-south, lion-north) symbolizing cardinal directions, (3) four standing lions facing the cardinal points, signifying courage, power, and self-confidence.
+• Statement 3 is correct: Beneath each lion is the Dharma-chakra (with 24 spokes).</div>
+      </section>
+
+      <!-- Q10 -->
+      <section class="slide" id="slide-10" role="group" aria-roledescription="slide" aria-label="Question 10">
+        <div class="qtag">Q10 • Answer: C</div>
+        <h2>Explanation</h2>
+        <div class="content">In the post-Gupta period, hundi (bill of exchange) functioned as:
+• A written order for transfer between individuals.
+• An instrument used in both domestic and foreign trade (like a letter of credit).
+• A credit instrument.</div>
+      </section>
+
+      <!-- Q11 -->
+      <section class="slide" id="slide-11" role="group" aria-roledescription="slide" aria-label="Question 11">
+        <div class="qtag">Q11 • Answer: B</div>
+        <h2>Explanation</h2>
+        <div class="content">• Statement 1 is correct: The Hathigumpha inscription mentions King Kharavela, a Chedi ruler and a Jain follower.
+• Statement 2 is incorrect: Gandhara art developed under the Kushans, in the northwest (near modern Afghanistan and Punjab), blending Greek and Roman traditions (Greco-Indian school).
+• Statement 3 is correct: Gautamiputra Satakarni is considered the most important Satavahana ruler and a protector of Brahmanism; he restricted inter-caste marriage among traders.
+• Statement 4 is correct: The custom of child marriage began during the Kushan period; the upanayana ritual ceased for girls in this period.</div>
+      </section>
+
+      <!-- Q12 -->
+      <section class="slide" id="slide-12" role="group" aria-roledescription="slide" aria-label="Question 12">
+        <div class="qtag">Q12 • Answer: C</div>
+        <h2>Explanation</h2>
+        <div class="content">Ashoka’s religious pilgrimage route: Lumbini, Kapilavastu, Bodh Gaya, Sarnath, Kushinagara, and Shravasti. After adopting Buddhism, he actively practiced Dhamma, visiting villages to preach and relieve suffering.</div>
+      </section>
+
+      <!-- Q13 -->
+      <section class="slide" id="slide-13" role="group" aria-roledescription="slide" aria-label="Question 13">
+        <div class="qtag">Q13 • Answer: B</div>
+        <h2>Explanation</h2>
+        <div class="content">Mahajanapada regions and capitals:
+• Uttarapatha — Taxila
+• Avanti — Ujjayini
+• Kosala — Shravasti
+• Dakshinapatha — Suvarnagiri
+• Prachya (Magadha) — Pataliputra
+• Videha — (not listed here in table; preserved from source alignment)</div>
+      </section>
+
+      <!-- Q14 -->
+      <section class="slide" id="slide-14" role="group" aria-roledescription="slide" aria-label="Question 14">
+        <div class="qtag">Q14 • Answer: A</div>
+        <h2>Explanation</h2>
+        <div class="content">• Statement 1 is correct: Classical scholars first identified Sandrokottos as Chandragupta Maurya; Arrian and Plutarch refer to him as Androkottos.
+• Statement 2 is correct: Greek writers called Bindusara as Amitrochates, Sanskrit Amatrogata (destroyer of foes).
+• Statement 3 is incorrect: Jain texts call Bindusara “Simhasena,” and his mother was Durdhara.</div>
+      </section>
+
+      <!-- Q15 -->
+      <section class="slide" id="slide-15" role="group" aria-roledescription="slide" aria-label="Question 15">
+        <div class="qtag">Q15 • Answer: A</div>
+        <h2>Explanation</h2>
+        <div class="content">During the Gupta period, important ports facilitating foreign trade:
+• Ghantashala (east coast, Krishna delta): gateway for Southeast Asian trade and cultural spread.
+• Kalyan (west coast, near present Mumbai): a major shipbuilding and maritime trade center.
+• Chaul (west coast, near Raigad, Maharashtra): aided overseas trade and spread of Indian culture to Africa.</div>
+      </section>
+
+      <!-- Q16 -->
+      <section class="slide" id="slide-16" role="group" aria-roledescription="slide" aria-label="Question 16">
+        <div class="qtag">Q16 • Answer: D</div>
+        <h2>Explanation</h2>
+        <div class="content">• Alexander was born in 356 BCE at Pella in Macedonia and died on June 13, 323 BCE, in Babylon.
+• He spent much of his reign campaigning across Asia and North Africa.
+• He invaded India in 326 BCE, crossed the Indus, advanced to Taxila, and defeated Porus between the Jhelum and Chenab at the Battle of Hydaspes.
+• He stayed in India for 19 months.
+• There was no battle between Chandragupta Maurya and Alexander.</div>
+      </section>
+
+      <!-- Q17 -->
+      <section class="slide" id="slide-17" role="group" aria-roledescription="slide" aria-label="Question 17">
+        <div class="qtag">Q17 • Answer: D</div>
+        <h2>Explanation</h2>
+        <div class="content">In Kanishka’s court were scholars Ashvaghosha, Nagarjuna, and Charaka. Charaka was the court physician; Nagarjuna, a Buddhist philosopher; Ashvaghosha, an orator-poet who presided over the Fourth Buddhist Council.</div>
+      </section>
+
+      <!-- Q18 -->
+      <section class="slide" id="slide-18" role="group" aria-roledescription="slide" aria-label="Question 18">
+        <div class="qtag">Q18 • Answer: A</div>
+        <h2>Explanation</h2>
+        <div class="content">Mahajanapada — Capital:
+• Kuru — Ahichchhatra/Indraprastha (Ahichchhatra shown)
+• Malla — Kushinagar
+• Kashi — Varanasi
+• Anga — Champa
+Sequence of invasions:
+• Parthians came to India after the Sakas.
+• Kushans were Central Asian tribes who entered India after the Parthians in the 1st century CE.</div>
+      </section>
+
+      <!-- Q19 -->
+      <section class="slide" id="slide-19" role="group" aria-roledescription="slide" aria-label="Question 19">
+        <div class="qtag">Q19 • Answer: A</div>
+        <h2>Explanation</h2>
+        <div class="content">• Indo-Greeks invaded India multiple times, beginning with Alexander’s conquest between 327–326 BCE; their rule focused on northwest India.
+• Sakas came after the Indo-Greeks during the 1st century BCE, ruling mainly in the northwest.</div>
+      </section>
+
+      <!-- Q20 -->
+      <section class="slide" id="slide-20" role="group" aria-roledescription="slide" aria-label="Question 20">
+        <div class="qtag">Q20 • Answer: D</div>
+        <h2>Explanation</h2>
+        <div class="content">• Statement 1: In Jainism, karma (both good and bad) binds the soul to the cycle of birth and death; austerities reduce and ultimately eliminate karma, leading to spiritual freedom.
+• Statement 2: Souls exist even in inanimate things like rocks, water, and the smallest particles; anekantavada underpins this belief by asserting reality’s complexity and multi-faceted nature.
+• Statement 3: Karma obstructs the soul’s freedom; accumulation of bodily actions binds the soul to samsara; the ultimate goal is moksha (release from karmic bondage).</div>
+      </section>
+
+      <!-- Q21 -->
+      <section class="slide" id="slide-21" role="group" aria-roledescription="slide" aria-label="Question 21">
+        <div class="qtag">Q21 • Answer: C</div>
+        <h2>Explanation</h2>
+        <div class="content">• Statement 1 is incorrect: Mahavira was born in 599 BCE at Kundagrama near Vaishali.
+• Statement 2 is correct: He was the son of Siddhartha (chief of the Jnatri Kshatriya clan) and Trishala (sister of Chetaka, chief of the Licchavi republic).
+• Statement 3 is incorrect: His childhood name was Vardhamana.
+• Statement 4 is correct: He married Yashoda; they had a daughter Annoja, who married Jamali (Mahavira’s first disciple). After 12 years of penance, Mahavira attained Kevala at Jrimbhikagrama on the banks of river Rijupalika under a sal tree at age 43.</div>
+      </section>
+
+      <!-- Q22 -->
+      <section class="slide" id="slide-22" role="group" aria-roledescription="slide" aria-label="Question 22">
+        <div class="qtag">Q22 • Answer: A</div>
+        <h2>Explanation</h2>
+        <div class="content">• The Buddha spent much of his life in Kosala; King Prasenajit and his family adopted Buddhism and built the Pabbharama Vihara.
+• He attained enlightenment under the Bodhi Tree at Bodh Gaya in Magadha.
+• There is no clear evidence connecting the Buddha’s life directly with Avanti or Gandhara.</div>
+      </section>
+
+      <!-- Q23 -->
+      <section class="slide" id="slide-23" role="group" aria-roledescription="slide" aria-label="Question 23">
+        <div class="qtag">Q23 • Answer: A</div>
+        <h2>Explanation</h2>
+        <div class="content">• Statement 1 is correct: At the Fourth Buddhist Council (Kundalvan, Kashmir), Buddhism split into Hinayana and Mahayana; Mahayanists deified the Buddha and began image worship, while Hinayanists revered him as a great person.
+• Statement 2 is correct: Nalanda Mahavihara is believed to have been built by Gupta ruler Kumaragupta and became a major center for Mahayana Buddhism.
+• Statement 3 is correct: Taxila, Vallabhi, and Nalanda were major centers for Hinayana learning (note: Nalanda is often associated with Mahayana, but teaching encompassed multiple schools; as per the source list, Hinayana centers included these).</div>
+      </section>
+
+      <!-- Q24 -->
+      <section class="slide" id="slide-24" role="group" aria-roledescription="slide" aria-label="Question 24">
+        <div class="qtag">Q24 • Answer: C</div>
+        <h2>Explanation</h2>
+        <div class="content">Ancient and modern names of rivers:
+• Askini — Chenab
+• Bipasha — Beas
+• Parushni — Ravi
+• Vitasta — Jhelum
+• Kubha — Kabul
+• Kruma — Kurram
+• Sadanira — Gandak
+• Shutudri — Sutlej</div>
+      </section>
+
+      <!-- Q25 -->
+      <section class="slide" id="slide-25" role="group" aria-roledescription="slide" aria-label="Question 25">
+        <div class="qtag">Q25 • Answer: C</div>
+        <h2>Explanation</h2>
+        <div class="content">The Tripitaka, the canonical body of Buddhism in Pali, consists of three baskets:
+• Vinaya Pitaka: monastic rules for the Sangha.
+• Sutta Pitaka: discourses and sayings of the Buddha.
+• Abhidhamma Pitaka: philosophical and analytical exposition of the Dhamma.</div>
+      </section>
+
+      <!-- Q26 -->
+      <section class="slide" id="slide-26" role="group" aria-roledescription="slide" aria-label="Question 26">
+        <div class="qtag">Q26 • Answer: A</div>
+        <h2>Explanation</h2>
+        <div class="content">Rock Edict 13 records Ashoka’s Kalinga victory; he adopted dhammavijaya after the war.</div>
+      </section>
+
+      <!-- Q27 -->
+      <section class="slide" id="slide-27" role="group" aria-roledescription="slide" aria-label="Question 27">
+        <div class="qtag">Q27 • Answer: C</div>
+        <h2>Explanation</h2>
+        <div class="content">Major Rock Edicts themes: I – ban on animal sacrifice/festivals; II – compassion to humans/animals, southern polities mentioned; III – liberality to Brahmanas; IV – drum of dhamma replacing war drum; VII – tolerance of all sects; VIII – first Bodh Gaya visit; IX – disapproval of popular ceremonies; XI – explanation of dhamma; XIII – Kalinga victory.</div>
+      </section>
+
+      <!-- Q28 -->
+      <section class="slide" id="slide-28" role="group" aria-roledescription="slide" aria-label="Question 28">
+        <div class="qtag">Q28 • Answer: D</div>
+        <h2>Explanation</h2>
+        <div class="content">• Rigveda does not clearly mention iron; “ayas” is generic; iron appears in later Vedic texts.
+• Yamuna (3x) and Ganga (1x) occur in the Rigveda.
+• Sindhu is most frequently mentioned; Sarasvati revered as sacred.</div>
+      </section>
+
+      <!-- Q29 -->
+      <section class="slide" id="slide-29" role="group" aria-roledescription="slide" aria-label="Question 29">
+        <div class="qtag">Q29 • Answer: D</div>
+        <h2>Explanation</h2>
+        <div class="content">• Rakhigarhi (Hisar, Haryana) on Ghaggar-Hakra is the largest IVC site.
+• Harappan discoveries and Buddhist councils summary included in the extract.</div>
+      </section>
+
+      <!-- Q30 -->
+      <section class="slide" id="slide-30" role="group" aria-roledescription="slide" aria-label="Question 30">
+        <div class="qtag">Q30 • Answer: B</div>
+        <h2>Explanation</h2>
+        <div class="content">• Mesolithic sites: Mahadaha, Damdama (41 graves), Sarai Nahar Rai (multiple burials).
+• Earliest domestication evidence in India from Bagor (Rajasthan).</div>
+      </section>
+
+      <!-- Q31 -->
+      <section class="slide" id="slide-31" role="group" aria-roledescription="slide" aria-label="Question 31">
+        <div class="qtag">Q31 • Answer: C</div>
+        <h2>Explanation</h2>
+        <div class="content">• Ashokan edicts mainly in Prakrit-Brahmi; Shahbazgarhi and Mansehra in Kharosthi; an Aramaic fragment from Taxila.</div>
+      </section>
+
+      <!-- Q32 -->
+      <section class="slide" id="slide-32" role="group" aria-roledescription="slide" aria-label="Question 32">
+        <div class="qtag">Q32 • Answer: B</div>
+        <h2>Explanation</h2>
+        <div class="content">• Paleolithic subsistence by hunting.
+• Mahajanapada lists differ in Jain vs Buddhist texts.
+• Panini’s Ashtadhyayi mentions 22 mahajanapadas.</div>
+      </section>
+
+      <!-- Q33 -->
+      <section class="slide" id="slide-33" role="group" aria-roledescription="slide" aria-label="Question 33">
+        <div class="qtag">Q33 • Answer: C</div>
+        <h2>Explanation</h2>
+        <div class="content">• Prehistory: no deciphered writing; Proto-history: scripts present but undeciphered; History: written records.
+• Stone Age = prehistory; Indus Valley = proto-history; Vedic = start of history.</div>
+      </section>
+
+      <!-- Q34 -->
+      <section class="slide" id="slide-34" role="group" aria-roledescription="slide" aria-label="Question 34">
+        <div class="qtag">Q34 • Answer: B</div>
+        <h2>Explanation</h2>
+        <div class="content">Key mapping:
+• Yoga: Patanjali
+• Vaisheshika: Kanada
+• Sankhya: Kapila
+• Nyaya: Gautama</div>
+      </section>
+
+      <!-- Q35 -->
+      <section class="slide" id="slide-35" role="group" aria-roledescription="slide" aria-label="Question 35">
+        <div class="qtag">Q35 • Answer: A</div>
+        <h2>Explanation</h2>
+        <div class="content">Sixteen mahajanapadas attested in Anguttara Nikaya and Jain Bhagavati Sutra.</div>
+      </section>
+
+      <!-- Q36 -->
+      <section class="slide" id="slide-36" role="group" aria-roledescription="slide" aria-label="Question 36">
+        <div class="qtag">Q36 • Answer: B</div>
+        <h2>Explanation</h2>
+        <div class="content">• Kalpasutra by Bhadrabahu.
+• Mallinath male in Digambara, female (Mallivati) in Shvetambara tradition.
+• Jain split (Shvetambara–Digambara) linked to Nanda-era famine; founders: Sthulabhadra (Shvetambara), Bhadrabahu (Digambara).</div>
+      </section>
+
+      <!-- Q37 -->
+      <section class="slide" id="slide-37" role="group" aria-roledescription="slide" aria-label="Question 37">
+        <div class="qtag">Q37 • Answer: C</div>
+        <h2>Explanation</h2>
+        <div class="content">• Alvars’ Tamil “Prabandham.”
+• Ramanuja’s Vishishtadvaita countered Advaita.
+• Madhva (Dvaita), Nimbarka (Dvaitadvaita) key Vaishnava acharyas.</div>
+      </section>
+
+      <!-- Q38 -->
+      <section class="slide" id="slide-38" role="group" aria-roledescription="slide" aria-label="Question 38">
+        <div class="qtag">Q38 • Answer: D</div>
+        <h2>Explanation</h2>
+        <div class="content">Key mapping (archaeology/origins):
+• Rakhal Das Banerji: Harappan sites
+• L.S. (Dr. Lakshman) Swarup: Dravidian hypothesis
+• V. Gordon Childe & Wheeler: Aryan perspectives
+• Sumerian mapping in comparative context</div>
+      </section>
+
+      <!-- Q39 -->
+      <section class="slide" id="slide-39" role="group" aria-roledescription="slide" aria-label="Question 39">
+        <div class="qtag">Q39 • Answer: B</div>
+        <h2>Explanation</h2>
+        <div class="content">• Harappan seals/terracottas show elephant, rhino, tiger, deer, sheep; not cow, camel, horse, lion.
+• IVC spread: Manda (north) to Daimabad (south), Sutkagendor (west) to Alamgirpur (east), ~1.3 million sq km.</div>
+      </section>
+
+      <!-- Q40 -->
+      <section class="slide" id="slide-40" role="group" aria-roledescription="slide" aria-label="Question 40">
+        <div class="qtag">Q40 • Answer: A</div>
+        <h2>Explanation</h2>
+        <div class="content">Pashupati seal from Mohenjo-daro; tri-faced yogic deity with rhino, buffalo (right) and elephant, tiger (left).</div>
+      </section>
+
+      <!-- Q41 -->
+      <section class="slide" id="slide-41" role="group" aria-roledescription="slide" aria-label="Question 41">
+        <div class="qtag">Q41 • Answer: A</div>
+        <h2>Explanation</h2>
+        <div class="content">Four Vedas (Rig, Yajur, Sama, Atharva); “Veda-trayi” = Rig, Yajur, Sama.</div>
+      </section>
+
+      <!-- Q42 -->
+      <section class="slide" id="slide-42" role="group" aria-roledescription="slide" aria-label="Question 42">
+        <div class="qtag">Q42 • Answer: C</div>
+        <h2>Explanation</h2>
+        <div class="content">• Samhitas: hymns; Brahmanas: rituals; Aranyakas: forest texts; Upanishads: philosophy (Vedanta, 108 in total).
+• Atharvaveda records folk beliefs; Ayurveda is its upaveda.
+• Rigveda: 10 mandalas, 1,028 suktas; Gayatri in Mandala 3, Soma in Mandala 9; Samaveda is musical source; Yajurveda ritual manual.</div>
+      </section>
+
+      <!-- Q43 -->
+      <section class="slide" id="slide-43" role="group" aria-roledescription="slide" aria-label="Question 43">
+        <div class="qtag">Q43 • Answer: D</div>
+        <h2>Explanation</h2>
+        <div class="content">• “Tamso ma jyotirgamaya” in Brihadaranyaka Upanishad.
+• “Satyameva Jayate” in Mundaka Upanishad.
+• Kathopanishad: Yama–Nachiketa dialogue.</div>
+      </section>
+
+      <!-- Q44 -->
+      <section class="slide" id="slide-44" role="group" aria-roledescription="slide" aria-label="Question 44">
+        <div class="qtag">Q44 • Answer: C</div>
+        <h2>Explanation</h2>
+        <div class="content">Rigvedic lexicon:
+• Karmara (smith), Vanik (trader), Nau (boatman), Nivi (lower garment), Vasa (upper garment).</div>
+      </section>
+
+      <!-- Q45 -->
+      <section class="slide" id="slide-45" role="group" aria-roledescription="slide" aria-label="Question 45">
+        <div class="qtag">Q45 • Answer: C</div>
+        <h2>Explanation</h2>
+        <div class="content">• Buddha born 563 BCE at Lumbini; father Suddhodana, mother Mahamaya.
+• Married Yashodhara at 16; son Rahul; Yashodhara’s other names: Gopa, Bimba, Bhaddakaccana.</div>
+      </section>
+
+      <!-- Q46 -->
+      <section class="slide" id="slide-46" role="group" aria-roledescription="slide" aria-label="Question 46">
+        <div class="qtag">Q46 • Answer: C</div>
+        <h2>Explanation</h2>
+        <div class="content">• Great Renunciation at 29.
+• Teachers: Alara Kalama near Vaishali; Uddaka Ramaputta at Rajgir.
+• Enlightenment at 35 under pipal (Bodhi tree) at Bodh Gaya after 6 years’ meditation.
+• First sermon at Sarnath (Dharmachakrapravartana).
+• Symbols: birth (lotus/bull), renunciation (horse), enlightenment (Bodhi tree), first sermon (Dharma wheel), parinirvana (stupa).</div>
+      </section>
+
+      <!-- Q47 -->
+      <section class="slide" id="slide-47" role="group" aria-roledescription="slide" aria-label="Question 47">
+        <div class="qtag">Q47 • Answer: C</div>
+        <h2>Explanation</h2>
+        <div class="content">• Anitya (impermanence) core Buddhist doctrine.
+• Shunyata articulated by Nagarjuna.
+• Jain Five Mahavratas: Ahimsa, Satya, Asteya, Aparigraha, Brahmacharya (systematized by Mahavira).</div>
+      </section>
+
+      <!-- Q48 -->
+      <section class="slide" id="slide-48" role="group" aria-roledescription="slide" aria-label="Question 48">
+        <div class="qtag">Q48 • Answer: C</div>
+        <h2>Explanation</h2>
+        <div class="content">• Nagarjuna, a renowned philosopher under Kanishka; composed Mulamadhyamakakarika.
+• Dubbed “India’s Einstein” metaphorically for relativity-like middle-way insights (philosophical analogy).</div>
+      </section>
+
+      <!-- Q49 -->
+      <section class="slide" id="slide-49" role="group" aria-roledescription="slide" aria-label="Question 49">
+        <div class="qtag">Q49 • Answer: C</div>
+        <h2>Explanation</h2>
+        <div class="content">Buddhist symbols:
+• Birth — lotus
+• Parinirvana — footprint (and stupa symbolism)
+• Enlightenment — Bodhi tree
+• First sermon — Dharma wheel</div>
+      </section>
+
+      <!-- Q50 -->
+      <section class="slide" id="slide-50" role="group" aria-roledescription="slide" aria-label="Question 50">
+        <div class="qtag">Q50 • Answer: D</div>
+        <h2>Explanation</h2>
+        <div class="content">• Earliest Buddha images in Gandhara style (Greco-Roman influence; Kushan period).
+• Rigveda mentions Rishabha and Arishtanemi (Neminath).
+• Gandhara art synthesizes Greco-Roman, Indian, also influences from China/Iran; centered Afghanistan–NW India.
+• Jain Tirthankaras and symbols: Rishabha–bull, Ajitnath–elephant, Sambhavnath–horse, Padmaprabha–lotus, Shreyansnath–rhinoceros (varies by tradition), Neminath–conch, Parshvanath–serpent, Mahavira–lion.</div>
+      </section>
+
+      <!-- Q51 -->
+      <section class="slide" id="slide-51" role="group" aria-roledescription="slide" aria-label="Question 51">
+        <div class="qtag">Q51 • Answer: A</div>
+        <h2>Explanation</h2>
+        <div class="content">• Mahavira founded a sangha of 11 ganadharas; succession: Sudharman, then Jambu.
+• “Chedi Purvas” early Jain corpus; only a few knew all 14 Purvas.
+• Jain scriptures (Agamas): 12 Angas, 12 Upangas, 10 Prakirnas, 6 Chedasutras, 4 Mulasutras, 2 Culikasutras; compilations at Pataliputra (c.310 BCE) and Valabhi (512 CE).</div>
+      </section>
+
+      <!-- Q52 -->
+      <section class="slide" id="slide-52" role="group" aria-roledescription="slide" aria-label="Question 52">
+        <div class="qtag">Q52 • Answer: C</div>
+        <h2>Explanation</h2>
+        <div class="content">• Bimbisara first prominent Haryanka ruler; sent physician Jivaka to Avanti’s Pradyota.
+• Udayin (Ajatashatru’s son) shifted Magadha’s capital to Pataliputra; built fort at Ganga–Son confluence.
+• Hathigumpha inscription on Kharavela’s deeds (17 lines) in Udayagiri cave.
+• Bhasa’s Svapnavasavadatta on Udayana–Vasavadatta.</div>
+      </section>
+
+      <!-- Q53 -->
+      <section class="slide" id="slide-53" role="group" aria-roledescription="slide" aria-label="Question 53">
+        <div class="qtag">Q53 • Answer: A</div>
+        <h2>Explanation</h2>
+        <div class="content">• Rudradaman (150 CE) Junagadh inscription mentions Chandragupta Maurya’s governor Pushyagupta building Sudarshana lake; shows Mauryan control in western India.
+• Mudrarakshasa offers info on Chandragupta; other works by Vishakhadatta: Devi-Chandraguptam, etc.</div>
+      </section>
+
+      <!-- Q54 -->
+      <section class="slide" id="slide-54" role="group" aria-roledescription="slide" aria-label="Question 54">
+        <div class="qtag">Q54 • Answer: B</div>
+        <h2>Explanation</h2>
+        <div class="content">• Ashoka built hospitals, planted trees, dug wells.
+• Titled “Devanampriya” in Girnar inscription; third Mauryan emperor.</div>
+      </section>
+
+      <!-- Q55 -->
+      <section class="slide" id="slide-55" role="group" aria-roledescription="slide" aria-label="Question 55">
+        <div class="qtag">Q55 • Answer: A</div>
+        <h2>Explanation</h2>
+        <div class="content">Mauryan posts:
+• Pautavadhyaksha (weights/measures), Samaharta (revenue), Dandapasika (police/judiciary), Antapala (frontier), Pradeshta (judge), Panyadhyaksha (trade), Sitadhyaksha (agriculture), Sunadhyaksha (mint).</div>
+      </section>
+
+      <!-- Q56 -->
+      <section class="slide" id="slide-56" role="group" aria-roledescription="slide" aria-label="Question 56">
+        <div class="qtag">Q56 • Answer: D</div>
+        <h2>Explanation</h2>
+        <div class="content">• Kailasa temple at Ellora is a monolithic marvel; built by Rashtrakuta Krishna I.
+• Herodotus called “Father of History”; wrote Histories; on Indo-Persian relations.
+• Sangam assemblies under Pandyas: traditionally three assemblies (literary compilations).</div>
+      </section>
+
+      <!-- Q57 -->
+      <section class="slide" id="slide-57" role="group" aria-roledescription="slide" aria-label="Question 57">
+        <div class="qtag">Q57 • Answer: D</div>
+        <h2>Explanation</h2>
+        <div class="content">• Chaitya = Buddhist prayer hall with stupa.
+• Vihara = monastery/residence; literal “secluded place,” later monastic dwellings.</div>
+      </section>
+
+      <!-- Q58 -->
+      <section class="slide" id="slide-58" role="group" aria-roledescription="slide" aria-label="Question 58">
+        <div class="qtag">Q58 • Answer: B</div>
+        <h2>Explanation</h2>
+        <div class="content">• Ajanta Cave 1: Bodhisattva Padmapani painting is a classic.
+• 30 rock-cut Buddhist caves in Maharashtra; paintings largely Jataka themes.</div>
+      </section>
+
+      <!-- Q59 -->
+      <section class="slide" id="slide-59" role="group" aria-roledescription="slide" aria-label="Question 59">
+        <div class="qtag">Q59 • Answer: D</div>
+        <h2>Explanation</h2>
+        <div class="content">• Sushruta: father of surgery; 8 surgical categories; anesthesia via wine/hemp; Sushruta Samhita enumerates procedures/instruments.
+• Shudraka: Mricchakatika, etc.
+• Shaunaka: Rigveda ancillary works (Anukramanis), Brihaddevata.</div>
+      </section>
+
+      <!-- Q60 -->
+      <section class="slide" id="slide-60" role="group" aria-roledescription="slide" aria-label="Question 60">
+        <div class="qtag">Q60 • Answer: D</div>
+        <h2>Explanation</h2>
+        <div class="content">Scripts:
+• Kharosthi: 3rd c. BCE–3rd c. CE NW India; right-to-left; deciphered by James Prinsep.
+• Brahmi: earliest wide Indian script; Ashokan edicts; left-to-right; Prinsep (1837).
+• Sharada: N.W. Indian descendant of Brahmi; used for Sanskrit/Kashmiri; left-to-right.
+• Nandinagari: Deccan/North Karnataka; left-to-right; Sanskrit inscriptions.</div>
+      </section>
+
+      <!-- Q61 -->
+      <section class="slide" id="slide-61" role="group" aria-roledescription="slide" aria-label="Question 61">
+        <div class="qtag">Q61 • Answer: B</div>
+        <h2>Explanation</h2>
+        <div class="content">Gupta ports:
+• Kalyan (Konkan), Tamralipti (Bengal), Barygaza (Bharuch), Cambay (Khambhat) — active with Rome/Greeks/Arabs/SE Asia.
+Magadha:
+• Early capital Rajagriha; later Pataliputra by Udayin (460–444 BCE).</div>
+      </section>
+
+      <!-- Q62 -->
+      <section class="slide" id="slide-62" role="group" aria-roledescription="slide" aria-label="Question 62">
+        <div class="qtag">Q62 • Answer: C</div>
+        <h2>Explanation</h2>
+        <div class="content">• Devi-Chandraguptam and other sources cite Ramagupta (elder to Chandragupta II).
+• Chandragupta II assumed Vikramaditya and Sakari; defeated Rudrasena II; first Gupta to issue gold coins.
+• Faxian visited during Chandragupta II; Navaratnas list (traditional).</div>
+      </section>
+
+      <!-- Q63 -->
+      <section class="slide" id="slide-63" role="group" aria-roledescription="slide" aria-label="Question 63">
+        <div class="qtag">Q63 • Answer: D</div>
+        <h2>Explanation</h2>
+        <div class="content">• Neolithic earliest domestication at Mehrgarh (7000 BCE); also Kile Gul Mohammed.
+• Chola expansion: Rajendra I annexed Sri Lanka.
+• Neolithic site notes: Anjira (Saurashtra), Domb Sadaat (Kurnool), etc.</div>
+      </section>
+
+      <!-- Q64 -->
+      <section class="slide" id="slide-64" role="group" aria-roledescription="slide" aria-label="Question 64">
+        <div class="qtag">Q64 • Answer: A</div>
+        <h2>Explanation</h2>
+        <div class="content">• Shudraka: Mricchakatika, Svapnavasavadatta (attrib. disputed), Padmaprabhritaka.
+• Kalidasa: Kumarasambhava, Raghuvamsa, Meghaduta, Abhijnana Shakuntalam, Malavikagnimitram, Vikramorvashiyam.
+• Arthashastra by Kautilya/Chanakya; rediscovered by R. Shamasastry (1905).
+• Periplus of the Erythraean Sea: 1st c. CE Greek periplus on navigation/trade.
+• Aryabhata: Aryabhatiya; algebra, trig; pi approximation; Earth’s rotation.</div>
+      </section>
+
+      <!-- Q65 -->
+      <section class="slide" id="slide-65" role="group" aria-roledescription="slide" aria-label="Question 65">
+        <div class="qtag">Q65 • Answer: C</div>
+        <h2>Explanation</h2>
+        <div class="content">• Nalanda copperplate of Devapala: grant to build a monastery at Nalanda on request of Srivijaya’s king.
+• 2022: earliest South Indian Iron Age date from Mayiladumparai, Tamil Nadu (~2172 BCE).
+• Harappan sites: Lothal (Gujarat port), Dabarkot (Balochistan), Kalibangan (Rajasthan), Rakhigarhi (Haryana).
+• Earliest human presence in India: Hathnora (Narmada valley).</div>
+      </section>
+
+      <!-- Q66 -->
+      <section class="slide" id="slide-66" role="group" aria-roledescription="slide" aria-label="Question 66">
+        <div class="qtag">Q66 • Answer: A</div>
+        <h2>Explanation</h2>
+        <div class="content">• Kalibangan shows early agriculture.
+• Ashoka’s Kalinga victory in Major Rock Edict 13 (8th regnal year); shift to dhamma-vijaya.</div>
+      </section>
+
+      <!-- Q67 -->
+      <section class="slide" id="slide-67" role="group" aria-roledescription="slide" aria-label="Question 67">
+        <div class="qtag">Q67 • Answer: B</div>
+        <h2>Explanation</h2>
+        <div class="content">• Mahayana: Buddha as divine; image worship; scriptures in Sanskrit; spread in China, Korea, Japan, Tibet.
+• Hinayana (Theravada): Buddha as human teacher; originally aniconic; scriptures in Pali; spread in Sri Lanka, Thailand, Laos, Cambodia, Myanmar.</div>
+      </section>
+
+      <!-- Q68 -->
+      <section class="slide" id="slide-68" role="group" aria-roledescription="slide" aria-label="Question 68">
+        <div class="qtag">Q68 • Answer: B</div>
+        <h2>Explanation</h2>
+        <div class="content">Note: Question statement not fully shown; marked answer retained per provided list.</div>
+      </section>
+
+      <!-- Q69 -->
+      <section class="slide" id="slide-69" role="group" aria-roledescription="slide" aria-label="Question 69">
+        <div class="qtag">Q69 • Answer: A</div>
+        <h2>Explanation</h2>
+        <div class="content">Gupta land categories:
+• Kshetra (cultivable), Gopta Sara (pasture), Vasti (habitation), Apratha (forest), Khila (waste).</div>
+      </section>
+
+      <!-- Q70 -->
+      <section class="slide" id="slide-70" role="group" aria-roledescription="slide" aria-label="Question 70">
+        <div class="qtag">Q70 • Answer: B</div>
+        <h2>Explanation</h2>
+        <div class="content">• Samudragupta called “Napoleon of Ancient India” by A.V. Smith (Prayag Prashasti by Harisena).
+• Titles: Maharajadhiraja; “hero of a hundred battles.”</div>
+      </section>
+
+      <!-- Q71 -->
+      <section class="slide" id="slide-71" role="group" aria-roledescription="slide" aria-label="Question 71">
+        <div class="qtag">Q71 • Answer: D</div>
+        <h2>Explanation</h2>
+        <div class="content">• Earliest inscriptional Sati: Nepal 464 CE (Axel Michaels); Eran (510 CE) mentions Goparaja’s wife’s sati; Chola examples: Vanavan Mahadevi, Vihar Mahadevi.
+• Megasthenes’ seven social classes in Indica.</div>
+      </section>
+
+      <!-- Q72 -->
+      <section class="slide" id="slide-72" role="group" aria-roledescription="slide" aria-label="Question 72">
+        <div class="qtag">Q72 • Answer: B</div>
+        <h2>Explanation</h2>
+        <div class="content">• Vaisheshika (Kanada): atomism; knowledge via experience; cosmically ordered.
+• Purva-Mimamsa (Jaimini): Vedas eternal/authorless; ritual central; dharma as duty/ritual.</div>
+      </section>
+
+      <!-- Q73 -->
+      <section class="slide" id="slide-73" role="group" aria-roledescription="slide" aria-label="Question 73">
+        <div class="qtag">Q73 • Answer: A</div>
+        <h2>Explanation</h2>
+        <div class="content">Chandragupta II’s Navaratnas (traditional): Amarasimha, Kalidasa, Dhanvantari, Harisena, Varahamihira, Vararuchi, Ghatakarpara/Vetalabhatta, Shanku, Kshapanaka (lists vary).</div>
+      </section>
+
+      <!-- Q74 -->
+      <section class="slide" id="slide-74" role="group" aria-roledescription="slide" aria-label="Question 74">
+        <div class="qtag">Q74 • Answer: A</div>
+        <h2>Explanation</h2>
+        <div class="content">• In Gupta plays, women/Shudras speak Prakrit; elites use Sanskrit.
+• Gold coins: dinara/suvarna; silver “rupaka” popularized by Chandragupta II (Sakari); Ramagupta issued copper coins.</div>
+      </section>
+
+      <!-- Q75 -->
+      <section class="slide" id="slide-75" role="group" aria-roledescription="slide" aria-label="Question 75">
+        <div class="qtag">Q75 • Answer: A</div>
+        <h2>Explanation</h2>
+        <div class="content">• Brihatkatha by Gunadhya in Paisachi (traditionally under Satavahana king Hala).
+• Gandhara school flourished under Kushans; Greco-Roman blend; Buddhist focus.</div>
+      </section>
+
+    </div>
+
+    <div class="nav" aria-label="Slideshow controls">
+      <button class="btn" id="prevBtn" aria-label="Previous (Left Arrow)">⟵ Previous</button>
+      <div class="counter" id="counter" aria-live="polite" aria-atomic="true">1 / 75</div>
+      <div>
+        <span class="subtitle" aria-hidden="true">Use <span class="kbd">←</span> <span class="kbd">→</span></span>
+        <button class="btn" id="nextBtn" aria-label="Next (Right Arrow)">Next ⟶</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const slides = [...document.querySelectorAll('.slide')];
+      const counter = document.getElementById('counter');
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const total = slides.length;
+      let index = slides.findIndex(s => s.classList.contains('active'));
+      if(index < 0) index = 0;
+
+      function show(i){
+        slides[index].classList.remove('active');
+        index = (i + total) % total;
+        slides[index].classList.add('active');
+        counter.textContent = (index+1) + ' / ' + total;
+        // Focus slide for accessibility
+        slides[index].setAttribute('tabindex','-1');
+        slides[index].focus({preventScroll:true});
+      }
+      function prev(){ show(index - 1); }
+      function next(){ show(index + 1); }
+
+      prevBtn.addEventListener('click', prev);
+      nextBtn.addEventListener('click', next);
+
+      window.addEventListener('keydown', (e)=>{
+        if(e.key === 'ArrowLeft'){ prev(); }
+        else if(e.key === 'ArrowRight'){ next(); }
+      }, {passive:true});
+
+      // Touch swipe
+      let x0 = null;
+      const deck = document.getElementById('deck');
+      deck.addEventListener('touchstart', e => { x0 = e.changedTouches[0].clientX; }, {passive:true});
+      deck.addEventListener('touchend', e => {
+        if(x0===null) return;
+        const dx = e.changedTouches[0].clientX - x0;
+        if(Math.abs(dx) > 40){ if(dx < 0) next(); else prev(); }
+        x0 = null;
+      }, {passive:true});
+    })();
+  </script>
+</body>
+</html>
