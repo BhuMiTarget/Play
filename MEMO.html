@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Self‑Memory App — Single HTML</title>
+  <style>
+    :root{
+      --bg:#0b0c10;--card:#11141a;--muted:#a3a9b8;--text:#eaeef7;--accent:#7c5cff;--accent-2:#42d392;
+      --ring:rgba(124,92,255,.5);--shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    [data-theme="light"]{--bg:#f6f7fb;--card:#ffffff;--muted:#5a6275;--text:#0e1320;--accent:#5b6cff;--accent-2:#2db27f;--ring:rgba(91,108,255,.45);--shadow:0 10px 24px rgba(17,20,26,.12)}
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--text);font:500 16px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji"}
+    a{color:var(--accent)}
+    .wrap{max-width:980px;margin:40px auto;padding:0 16px}
+    .title{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .badge{font-size:12px;padding:.25rem .55rem;border-radius:999px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;box-shadow:var(--shadow)}
+    .card{background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:18px; padding:18px; box-shadow:var(--shadow)}
+    .grid{display:grid;gap:16px}
+    @media (min-width:800px){.grid{grid-template-columns:1.2fr 1fr}}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    input[type=text], textarea, select{width:100%;padding:12px 14px;border-radius:12px;border:1px solid transparent;background:rgba(255,255,255,.06);color:var(--text);outline:none}
+    input::placeholder, textarea::placeholder{color:#8d95a7}
+    input:focus, textarea:focus, select:focus{border-color:var(--ring);box-shadow:0 0 0 6px color-mix(in oklab, var(--ring) 20%, transparent)}
+    textarea{min-height:120px;resize:vertical}
+    button{appearance:none;border:0;border-radius:12px;padding:10px 14px;background:var(--accent);color:#fff;font-weight:700;cursor:pointer;box-shadow:var(--shadow)}
+    button.ghost{background:transparent;border:1px solid rgba(255,255,255,.15);color:var(--text)}
+    button.warn{background:#ef4444}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+    .tab{padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);cursor:pointer}
+    .tab[aria-selected="true"]{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff}
+    .todo{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04)}
+    .todo.done{opacity:.6;text-decoration:line-through}
+    .footer{opacity:.7;margin-top:12px;font-size:12px}
+    .dl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .right{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+    .small{font-size:12px}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+    dialog{border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:0;background:var(--card);color:var(--text)}
+    dialog .dlg-body{padding:16px}
+    dialog::backdrop{background:rgba(0,0,0,.5)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="title">
+      <h1 style="margin:0">🧠 Self‑Memory App</h1>
+      <span class="badge">Single file • Offline • LocalStorage</span>
+      <span id="status" class="pill small" title="Autosave status">Saved</span>
+    </div>
+
+    <div class="grid" style="margin-top:16px">
+      <section class="card">
+        <div class="tabs" role="tablist" aria-label="Sections">
+          <button class="tab" role="tab" data-tab="profile" aria-selected="true">Profile</button>
+          <button class="tab" role="tab" data-tab="notes">Notes</button>
+          <button class="tab" role="tab" data-tab="todos">To‑dos</button>
+          <button class="tab" role="tab" data-tab="settings">Settings</button>
+        </div>
+
+        <div id="panel-profile" role="tabpanel">
+          <div class="row">
+            <div style="flex:1 1 220px">
+              <label for="name">Your name</label>
+              <input id="name" type="text" placeholder="e.g. Alex"/>
+            </div>
+            <div style="flex:1 1 220px">
+              <label for="favColor">Favorite color</label>
+              <input id="favColor" type="text" placeholder="e.g. Teal"/>
+            </div>
+          </div>
+          <div style="margin-top:12px">
+            <label for="bio">Short bio</label>
+            <textarea id="bio" placeholder="Say hello to your future self…"></textarea>
+          </div>
+        </div>
+
+        <div id="panel-notes" role="tabpanel" hidden>
+          <label for="notes">Notes</label>
+          <textarea id="notes" class="mono" placeholder="Jot anything. It autosaves."></textarea>
+        </div>
+
+        <div id="panel-todos" role="tabpanel" hidden>
+          <div class="row">
+            <input id="todoText" type="text" placeholder="Add a task and press Enter"/>
+            <button id="addTodo">Add</button>
+          </div>
+          <div id="todoList" style="margin-top:12px;display:grid;gap:8px"></div>
+        </div>
+
+        <div id="panel-settings" role="tabpanel" hidden>
+          <div class="row" style="align-items:center;justify-content:space-between">
+            <div>
+              <div class="small" style="opacity:.8">Theme</div>
+              <div class="small" id="themeLabel">Dark</div>
+            </div>
+            <button id="toggleTheme" class="ghost">Toggle Light/Dark</button>
+          </div>
+
+          <hr style="border:0;border-top:1px solid rgba(255,255,255,.1);margin:16px 0">
+
+          <div class="row">
+            <button id="exportBtn">Export Memory</button>
+            <label class="pill" for="importFile" style="cursor:pointer">📥 Import Memory <input id="importFile" type="file" accept="application/json" hidden></label>
+            <button id="backupBtn" class="ghost">Create Backup</button>
+            <button id="viewRaw" class="ghost">View Raw</button>
+            <button id="resetBtn" class="warn">Reset Memory</button>
+          </div>
+          <div class="footer">
+            <div>Storage usage: <span id="usage">0</span> • Last saved: <span id="lastSaved">—</span></div>
+            <div class="dl">Key: <span class="mono" id="key"></span></div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="card">
+        <h3 style="margin:.2rem 0 1rem">About this file</h3>
+        <p>This single HTML remembers everything locally on your device using <strong>localStorage</strong>. No server, no cookies, works offline.</p>
+        <ul style="margin:.2rem 0 1rem 1.1rem">
+          <li>Autosaves on every change (debounced)</li>
+          <li>Light/Dark theme is remembered</li>
+          <li>Export/Import your memory as JSON</li>
+          <li>Time‑stamped backups</li>
+          <li>Accessible, mobile‑friendly UI</li>
+        </ul>
+        <details>
+          <summary class="small">How it works</summary>
+          <p class="small">We maintain a single JSON document under a namespaced key. Schema versioning lets you evolve safely.</p>
+        </details>
+      </aside>
+    </div>
+
+    <p class="footer">Pro‑tip: Save this page to your phone’s home screen; it still remembers offline.</p>
+  </div>
+
+  <dialog id="rawDialog">
+    <div class="dlg-body">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <strong>Raw Memory JSON</strong>
+        <button id="closeRaw" class="ghost">Close</button>
+      </div>
+      <textarea id="rawText" class="mono" style="margin-top:10px;min-height:40vh"></textarea>
+      <div class="right" style="margin-top:8px">
+        <button id="saveRaw" class="ghost">Save Edits</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+  (function(){
+    const APP_NAME = 'self-memory-app';
+    const SCHEMA_VERSION = 1;
+    const STORAGE_KEY = `${APP_NAME}::v${SCHEMA_VERSION}`;
+    const statusEl = document.getElementById('status');
+    const usageEl = document.getElementById('usage');
+    const lastSavedEl = document.getElementById('lastSaved');
+    const keyEl = document.getElementById('key');
+
+    const els = {
+      tabs: document.querySelectorAll('.tab'),
+      panels: {
+        profile: document.getElementById('panel-profile'),
+        notes: document.getElementById('panel-notes'),
+        todos: document.getElementById('panel-todos'),
+        settings: document.getElementById('panel-settings')
+      },
+      name: document.getElementById('name'),
+      favColor: document.getElementById('favColor'),
+      bio: document.getElementById('bio'),
+      notes: document.getElementById('notes'),
+      todoText: document.getElementById('todoText'),
+      todoList: document.getElementById('todoList'),
+      toggleTheme: document.getElementById('toggleTheme'),
+      themeLabel: document.getElementById('themeLabel'),
+      exportBtn: document.getElementById('exportBtn'),
+      importFile: document.getElementById('importFile'),
+      backupBtn: document.getElementById('backupBtn'),
+      resetBtn: document.getElementById('resetBtn'),
+      viewRaw: document.getElementById('viewRaw'),
+      rawDialog: document.getElementById('rawDialog'),
+      rawText: document.getElementById('rawText'),
+      closeRaw: document.getElementById('closeRaw'),
+      saveRaw: document.getElementById('saveRaw'),
+    };
+
+    /**
+     * Memory Store
+     */
+    const nowISO = () => new Date().toISOString();
+
+    const defaultDoc = () => ({
+      _meta: { schema: SCHEMA_VERSION, createdAt: nowISO(), updatedAt: nowISO(), backups: [] },
+      settings: { theme: matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark', lastTab: 'profile' },
+      profile: { name: '', favColor: '', bio: '' },
+      notes: '',
+      todos: []
+    });
+
+    function load(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(!raw){ return defaultDoc(); }
+        const json = JSON.parse(raw);
+        if(!json._meta || json._meta.schema !== SCHEMA_VERSION){
+          // simple migration example
+          json._meta = json._meta || {}; json._meta.schema = SCHEMA_VERSION;
+        }
+        return json;
+      }catch(err){
+        console.warn('Corrupt memory; starting fresh', err);
+        return defaultDoc();
+      }
+    }
+
+    function sizeOf(str){ return new Blob([str]).size; }
+
+    let doc = load();
+    let saveTimer = null; // debounce
+
+    function updateStatus(text, wait=1200){
+      statusEl.textContent = text; statusEl.style.background = 'linear-gradient(135deg,var(--accent),var(--accent-2))';
+      clearTimeout(updateStatus._t);
+      updateStatus._t = setTimeout(()=>{ statusEl.textContent = 'Saved'; statusEl.style.background = ''; }, wait);
+    }
+
+    function renderUsage(){
+      const raw = JSON.stringify(doc);
+      usageEl.textContent = `${(sizeOf(raw)/1024).toFixed(1)} KB`;
+      keyEl.textContent = STORAGE_KEY;
+    }
+
+    function persist(immediate=false){
+      const doSave = () => {
+        try{
+          doc._meta.updatedAt = nowISO();
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(doc));
+          lastSavedEl.textContent = new Date(doc._meta.updatedAt).toLocaleString();
+          renderUsage();
+        }catch(err){
+          alert('Save failed: ' + err.message);
+          console.error(err);
+        }
+      };
+      if(immediate){ doSave(); return; }
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(doSave, 300);
+    }
+
+    function backup(){
+      const stamp = nowISO().replace(/[:.]/g,'-');
+      const key = `${STORAGE_KEY}::backup::${stamp}`;
+      try{
+        localStorage.setItem(key, JSON.stringify(doc));
+        doc._meta.backups.unshift({ key, at: nowISO() });
+        doc._meta.backups = doc._meta.backups.slice(0, 10);
+        persist(true);
+        updateStatus('Backup created');
+      }catch(err){ alert('Backup failed: '+err.message); }
+    }
+
+    // UI <-> Doc binding
+    function applyTheme(){
+      const t = doc.settings.theme || 'dark';
+      document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : '');
+      els.themeLabel.textContent = t === 'light' ? 'Light' : 'Dark';
+    }
+
+    function populate(){
+      els.name.value = doc.profile.name || '';
+      els.favColor.value = doc.profile.favColor || '';
+      els.bio.value = doc.profile.bio || '';
+      els.notes.value = doc.notes || '';
+
+      // todos
+      renderTodos();
+
+      // tabs
+      selectTab(doc.settings.lastTab || 'profile', false);
+
+      // theme
+      applyTheme();
+
+      lastSavedEl.textContent = new Date(doc._meta.updatedAt).toLocaleString();
+      renderUsage();
+    }
+
+    function renderTodos(){
+      els.todoList.innerHTML = '';
+      for(const t of doc.todos){
+        const item = document.createElement('div');
+        item.className = 'todo' + (t.done ? ' done' : '');
+        item.innerHTML = `
+          <input type="checkbox" ${t.done? 'checked':''} aria-label="toggle">
+          <div style="flex:1">${escapeHtml(t.text)}</div>
+          <button class="ghost small" aria-label="delete">Delete</button>
+        `;
+        const [cb,,delBtn] = item.children;
+        cb.addEventListener('change',()=>{ t.done = cb.checked; persist(); renderTodos(); });
+        delBtn.addEventListener('click',()=>{ doc.todos = doc.todos.filter(x=>x!==t); persist(); renderTodos(); });
+        els.todoList.appendChild(item);
+      }
+    }
+
+    function addTodo(text){
+      if(!text.trim()) return;
+      doc.todos.unshift({ id: cryptoRandom(), text: text.trim(), done:false });
+      els.todoText.value='';
+      updateStatus('Added');
+      persist();
+      renderTodos();
+    }
+
+    function selectTab(name, save=true){
+      for(const b of els.tabs){
+        const active = b.dataset.tab === name; b.setAttribute('aria-selected', active);
+      }
+      for(const id of Object.keys(els.panels)){
+        els.panels[id].hidden = id !== name;
+      }
+      if(save){ doc.settings.lastTab = name; persist(); }
+    }
+
+    // helpers
+    function escapeHtml(s){ return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
+    function cryptoRandom(){
+      const a = new Uint32Array(2); crypto.getRandomValues(a); return [...a].map(n=>n.toString(36)).join('');
+    }
+
+    // Events
+    els.tabs.forEach(b=> b.addEventListener('click', ()=> selectTab(b.dataset.tab)) );
+
+    els.name.addEventListener('input', ()=>{ doc.profile.name = els.name.value; persist(); });
+    els.favColor.addEventListener('input', ()=>{ doc.profile.favColor = els.favColor.value; persist(); });
+    els.bio.addEventListener('input', ()=>{ doc.profile.bio = els.bio.value; persist(); });
+
+    els.notes.addEventListener('input', ()=>{ doc.notes = els.notes.value; persist(); });
+    els.todoText.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ addTodo(els.todoText.value); }});
+    document.getElementById('addTodo').addEventListener('click', ()=> addTodo(els.todoText.value));
+
+    els.toggleTheme.addEventListener('click', ()=>{ doc.settings.theme = (doc.settings.theme==='light'?'dark':'light'); applyTheme(); persist(); });
+
+    // Export
+    els.exportBtn.addEventListener('click', ()=>{
+      const blob = new Blob([JSON.stringify(doc,null,2)], {type:'application/json'});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      const name = `memory-${APP_NAME}-${new Date().toISOString().replace(/[:.]/g,'-')}.json`;
+      a.download = name; a.click(); URL.revokeObjectURL(a.href);
+    });
+
+    // Import
+    els.importFile.addEventListener('change', async () =>{
+      const f = els.importFile.files[0]; if(!f) return;
+      try{
+        const text = await f.text();
+        const json = JSON.parse(text);
+        if(!json._meta){ throw new Error('Invalid memory file'); }
+        doc = json; persist(true); populate(); updateStatus('Imported');
+      }catch(err){ alert('Import failed: '+err.message); }
+      finally{ els.importFile.value=''; }
+    });
+
+    // Backup
+    els.backupBtn.addEventListener('click', backup);
+
+    // Reset
+    els.resetBtn.addEventListener('click', ()=>{
+      if(confirm('This clears all memory stored for this app on this device. Continue?')){
+        localStorage.removeItem(STORAGE_KEY);
+        doc = defaultDoc(); persist(true); populate(); updateStatus('Reset complete');
+      }
+    });
+
+    // Raw view/edit
+    els.viewRaw.addEventListener('click', ()=>{
+      els.rawText.value = JSON.stringify(doc, null, 2);
+      els.rawDialog.showModal();
+    });
+    els.closeRaw.addEventListener('click', ()=> els.rawDialog.close());
+    els.saveRaw.addEventListener('click', ()=>{
+      try{ doc = JSON.parse(els.rawText.value); persist(true); populate(); els.rawDialog.close(); updateStatus('Raw saved'); }
+      catch(err){ alert('Invalid JSON: '+err.message); }
+    });
+
+    // beforeunload safety
+    window.addEventListener('beforeunload', ()=>{ persist(true); });
+
+    // Kick off
+    populate();
+
+  })();
+  </script>
+</body>
+</html>
