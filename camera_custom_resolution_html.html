@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Camera — Custom Resolution (1980×1980 down to 100×60)</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#06b6d4;--muted:#94a3b8;color-scheme:dark}
+    body{font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial; margin:0;background:linear-gradient(180deg,#020617 0%, #07102a 100%);color:#e6eef8;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    .wrap{max-width:980px;width:100%;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.04);padding:18px;border-radius:12px;box-shadow:0 6px 24px rgba(2,6,23,0.6)}
+    h1{font-size:18px;margin:0 0 12px}
+    .grid{display:grid;grid-template-columns:360px 1fr;gap:16px}
+    .card{background:var(--card);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)}
+    video{width:100%;height:auto;border-radius:8px;background:#000}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input[type=number],select{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit;font-size:14px}
+    .row{display:flex;gap:8px}
+    .row > *{flex:1}
+    button{background:var(--accent);border:0;color:#031022;padding:10px 12px;border-radius:8px;font-weight:600;cursor:pointer}
+    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+    .meta{font-size:13px;color:var(--muted);margin-top:8px}
+    .presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+    .preset{padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.02);cursor:pointer;font-size:13px}
+    .preset.active{outline:2px solid rgba(6,182,212,0.18)}
+    .controls{display:flex;gap:8px;margin-top:10px}
+    .small{padding:8px 10px;font-size:13px}
+    canvas{display:block;max-width:100%;border-radius:8px}
+    footer{margin-top:12px;font-size:12px;color:var(--muted)}
+    @media(max-width:880px){.grid{grid-template-columns:1fr;}.wrap{padding:12px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Camera — choose a custom resolution (1980×1980 down to 100×60)</h1>
+    <div class="grid">
+      <div class="card">
+        <label for="device">Camera</label>
+        <select id="device"></select>
+
+        <label style="margin-top:10px">Resolution presets</label>
+        <div id="presets" class="presets"></div>
+
+        <label style="margin-top:10px">Custom resolution (constraints will be clamped to allowed range)</label>
+        <div class="row">
+          <div>
+            <label for="width">Width (px)</label>
+            <input id="width" type="number" min="100" max="1980" value="1280">
+          </div>
+          <div>
+            <label for="height">Height (px)</label>
+            <input id="height" type="number" min="60" max="1980" value="720">
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+          <label style="margin:0"><input id="lock" type="checkbox"> lock aspect ratio</label>
+          <div style="flex:1"></div>
+          <button id="start" class="small">Start camera</button>
+          <button id="apply" class="small btn-ghost">Apply resolution</button>
+        </div>
+
+        <div class="meta" id="status">Status: idle</div>
+        <div class="meta" id="actual">Actual stream: —</div>
+      </div>
+
+      <div class="card" style="display:flex;flex-direction:column;gap:8px">
+        <video id="video" autoplay playsinline muted></video>
+        <div class="controls">
+          <button id="capture">Capture photo</button>
+          <button id="stop" class="btn-ghost">Stop camera</button>
+          <button id="download" class="btn-ghost">Download last</button>
+        </div>
+        <canvas id="canvas" style="display:none"></canvas>
+        <div id="info" class="meta">Captured: none</div>
+        <footer>Notes: this page requests camera access. Actual camera capability depends on device and browser — the code clamps requested values between 1980×1980 (max width/height) and 100×60 (min width/min height).</footer>
+      </div>
+    </div>
+  </div>
+
+<script>
+/*
+  Camera with custom resolution. Key points:
+  - Allowed range: width 100..1980, height 60..1980 (as requested by user)
+  - Uses getUserMedia with ideal constraints, then applies exact constraints to the track if supported
+  - Shows actual stream settings and allows capture/download
+*/
+
+const deviceSelect = document.getElementById('device');
+const presetsDiv = document.getElementById('presets');
+const widthInput = document.getElementById('width');
+const heightInput = document.getElementById('height');
+const lockCheckbox = document.getElementById('lock');
+const startBtn = document.getElementById('start');
+const applyBtn = document.getElementById('apply');
+const video = document.getElementById('video');
+const status = document.getElementById('status');
+const actual = document.getElementById('actual');
+const captureBtn = document.getElementById('capture');
+const stopBtn = document.getElementById('stop');
+const canvas = document.getElementById('canvas');
+const info = document.getElementById('info');
+const downloadBtn = document.getElementById('download');
+
+let stream = null;
+let lastBlob = null;
+
+const LIMITS = {
+  minWidth: 100,
+  minHeight: 60,
+  maxWidth: 1980,
+  maxHeight: 1980
+};
+
+// Build some useful presets descending from high to low, including some square sizes
+const PRESETS = [
+  [1980,1980],[1600,1200],[1280,1024],[1280,720],[1024,768],[800,600],[640,480],[480,360],[320,240],[200,150],[160,120],[100,60]
+];
+
+function clampResolution(w,h){
+  const W = Math.max(LIMITS.minWidth, Math.min(LIMITS.maxWidth, Math.round(w)));
+  const H = Math.max(LIMITS.minHeight, Math.min(LIMITS.maxHeight, Math.round(h)));
+  return [W,H];
+}
+
+function renderPresets(){
+  presetsDiv.innerHTML = '';
+  for(const p of PRESETS){
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'preset';
+    btn.textContent = p[0] + '×' + p[1];
+    btn.addEventListener('click', ()=>{
+      const [W,H] = clampResolution(p[0],p[1]);
+      widthInput.value = W; heightInput.value = H;
+      applyResolutionToTrack();
+      // highlight
+      document.querySelectorAll('.preset').forEach(el=>el.classList.remove('active'));
+      btn.classList.add('active');
+    });
+    presetsDiv.appendChild(btn);
+  }
+}
+
+async function enumerateCameras(){
+  try{
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const cams = devices.filter(d=>d.kind === 'videoinput');
+    deviceSelect.innerHTML = '';
+    cams.forEach((c,i)=>{
+      const opt = document.createElement('option');
+      opt.value = c.deviceId;
+      opt.text = c.label || `Camera ${i+1}`;
+      deviceSelect.appendChild(opt);
+    });
+    if(cams.length===0){
+      deviceSelect.innerHTML = '<option>no camera found</option>';
+    }
+  }catch(err){
+    console.error(err);deviceSelect.innerHTML = '<option>enumeration failed</option>';
+  }
+}
+
+function updateStatus(text){ status.textContent = 'Status: ' + text; }
+
+async function startCamera(){
+  // stop existing
+  stopCamera();
+  updateStatus('requesting permission...');
+  const deviceId = deviceSelect.value || undefined;
+  const w = parseInt(widthInput.value,10) || 1280;
+  const h = parseInt(heightInput.value,10) || 720;
+  const [W,H] = clampResolution(w,h);
+
+  const constraints = {
+    audio: false,
+    video: {
+      deviceId: deviceId ? { exact: deviceId } : undefined,
+      width: { ideal: W },
+      height: { ideal: H },
+      facingMode: 'environment'
+    }
+  };
+
+  try{
+    stream = await navigator.mediaDevices.getUserMedia(constraints);
+    video.srcObject = stream;
+    updateStatus('camera started');
+    await showActualSettings();
+  }catch(err){
+    console.error(err); updateStatus('error: ' + (err.message||err.name));
+  }
+}
+
+function stopCamera(){
+  if(stream){
+    stream.getTracks().forEach(t=>t.stop());
+    stream = null;
+    video.srcObject = null;
+    updateStatus('stopped');
+    actual.textContent = 'Actual stream: —';
+  }
+}
+
+async function showActualSettings(){
+  if(!stream) return;
+  const [track] = stream.getVideoTracks();
+  if(!track) return;
+  const s = track.getSettings ? track.getSettings() : {};
+  actual.textContent = `Actual stream: ${s.width||'?'}×${s.height||'?'} — frameRate: ${s.frameRate||'?'} — facingMode: ${s.facingMode||'?'}`;
+}
+
+async function applyResolutionToTrack(){
+  const w = parseInt(widthInput.value,10) || 1280;
+  const h = parseInt(heightInput.value,10) || 720;
+  const [W,H] = clampResolution(w,h);
+
+  // if lock aspect ratio, adjust height to preserve original aspect ratio of inputs
+  if(lockCheckbox.checked){
+    const origW = parseInt(widthInput.value,10) || W;
+    const origH = parseInt(heightInput.value,10) || H;
+    const ratio = origW / origH || (W/H);
+    // keep width and recompute height
+    const newH = Math.max(LIMITS.minHeight, Math.min(LIMITS.maxHeight, Math.round(W / ratio)));
+    heightInput.value = newH;
+  }
+
+  if(!stream){
+    updateStatus('start camera first (permission needed)');
+    return;
+  }
+
+  const [track] = stream.getVideoTracks();
+  if(!track){ updateStatus('no video track'); return; }
+
+  // try applying exact constraints if supported
+  try{
+    updateStatus('applying constraints...');
+    if(track.applyConstraints){
+      await track.applyConstraints({ advanced: [{ width: W, height: H }] });
+      updateStatus('constraints applied');
+    }else{
+      updateStatus('applyConstraints not supported — restarting stream');
+      // fallback: restart camera with new ideal constraints
+      await startCamera();
+    }
+    await showActualSettings();
+  }catch(err){
+    console.warn('applyConstraints failed', err);
+    // restart stream with new ideal constraints
+    updateStatus('apply failed — restarting stream with new ideal');
+    // get device selection and restart
+    await startCamera();
+  }
+}
+
+function capturePhoto(){
+  if(!stream){ updateStatus('no active stream'); return; }
+  const [track] = stream.getVideoTracks();
+  const s = track.getSettings();
+  const W = s.width || parseInt(widthInput.value,10) || 1280;
+  const H = s.height || parseInt(heightInput.value,10) || 720;
+
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  // draw scaled video into canvas
+  ctx.drawImage(video, 0, 0, W, H);
+  canvas.style.display = 'block';
+  canvas.toBlob(blob =>{
+    lastBlob = blob;
+    info.textContent = `Captured: ${W}×${H} — ${Math.round(blob.size/1024)} KB`;
+  }, 'image/jpeg', 0.92);
+}
+
+function downloadLast(){
+  if(!lastBlob){ alert('No capture yet'); return; }
+  const url = URL.createObjectURL(lastBlob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `photo_${Date.now()}.jpg`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+// wire events
+startBtn.addEventListener('click', startCamera);
+stopBtn.addEventListener('click', stopCamera);
+applyBtn.addEventListener('click', applyResolutionToTrack);
+captureBtn.addEventListener('click', capturePhoto);
+downloadBtn.addEventListener('click', downloadLast);
+
+// keep aspect ratio when user edits width or height if lock is on
+let lockUpdating = false;
+widthInput.addEventListener('input', ()=>{
+  if(!lockCheckbox.checked || lockUpdating) return;
+  lockUpdating = true;
+  const w = parseInt(widthInput.value,10) || LIMITS.minWidth;
+  const oldH = parseInt(heightInput.getAttribute('data-last')||heightInput.value,10)||parseInt(heightInput.value,10);
+  const oldW = parseInt(widthInput.getAttribute('data-last')||widthInput.value,10)||parseInt(widthInput.value,10);
+  const ratio = oldW && oldH ? (oldH/oldW) : 9/16;
+  const newH = Math.round(w * ratio);
+  const [W,H] = clampResolution(w,newH);
+  heightInput.value = H;
+  widthInput.setAttribute('data-last', w);
+  heightInput.setAttribute('data-last', H);
+  lockUpdating = false;
+});
+
+heightInput.addEventListener('input', ()=>{
+  if(!lockCheckbox.checked || lockUpdating) return;
+  lockUpdating = true;
+  const h = parseInt(heightInput.value,10) || LIMITS.minHeight;
+  const oldH = parseInt(heightInput.getAttribute('data-last')||heightInput.value,10)||parseInt(heightInput.value,10);
+  const oldW = parseInt(widthInput.getAttribute('data-last')||widthInput.value,10)||parseInt(widthInput.value,10);
+  const ratio = oldW && oldH ? (oldW/oldH) : 16/9;
+  const newW = Math.round(h * ratio);
+  const [W,H] = clampResolution(newW,h);
+  widthInput.value = W;
+  widthInput.setAttribute('data-last', W);
+  heightInput.setAttribute('data-last', h);
+  lockUpdating = false;
+});
+
+// refresh camera list on load
+(async ()=>{
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    updateStatus('getUserMedia not supported in this browser');
+    return;
+  }
+  await enumerateCameras();
+  renderPresets();
+})();
+
+// refresh enumeration when devices change (e.g., plugging external camera)
+if(navigator.mediaDevices && navigator.mediaDevices.addEventListener){
+  navigator.mediaDevices.addEventListener('devicechange', enumerateCameras);
+}
+</script>
+</body>
+</html>
