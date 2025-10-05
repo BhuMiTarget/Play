@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Notes App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f4; }
+    h1 { text-align: center; }
+    #noteInput { width: 100%; padding: 10px; font-size: 16px; }
+    #addBtn { margin-top: 10px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
+    .note { background: #fff; padding: 12px; margin: 10px 0; border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .time { font-size: 12px; color: gray; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <h1>My Notes</h1>
+  <textarea id="noteInput" rows="3" placeholder="Type your note..."></textarea><br>
+  <button id="addBtn">Add Note</button>
+  <div id="notes"></div>
+
+  <script>
+    const notesDiv = document.getElementById("notes");
+    const noteInput = document.getElementById("noteInput");
+    const addBtn = document.getElementById("addBtn");
+    const STORAGE_KEY = "myNotes";
+
+    // Load saved notes
+    let notes = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    render();
+
+    addBtn.addEventListener("click", addNote);
+
+    function addNote() {
+      const text = noteInput.value.trim();
+      if (!text) return;
+      const note = {
+        text,
+        time: new Date().toLocaleString()
+      };
+      notes.unshift(note);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+      noteInput.value = "";
+      render();
+    }
+
+    function render() {
+      notesDiv.innerHTML = "";
+      notes.forEach(n => {
+        const div = document.createElement("div");
+        div.className = "note";
+        div.innerHTML = `<div>${n.text}</div><div class="time">${n.time}</div>`;
+        notesDiv.appendChild(div);
+      });
+    }
+  </script>
+</body>
+</html>
