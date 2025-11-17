@@ -1,295 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Image Crop & Resize</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      margin: 10px;
-      background: #f0f0f0;
-    }
-    .container {
-      max-width: 100%;
-      margin: auto;
-    }
-    .row {
-      margin: 10px 0;
-    }
-    canvas {
-      max-width: 100%;
-      border: 1px solid #999;
-      touch-action: none;
-    }
-    .btn {
-      padding: 6px 12px;
-      margin: 4px;
-    }
-    #cropOverlay {
-      position: absolute;
-      border: 2px dashed red;
-      pointer-events: none;
-    }
-    .note {
-      font-size: 0.9em;
-      color: #555;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Entry and Export</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .controls { margin-bottom: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 5px; background-color: #f9f9f9; }
+        .controls label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .controls input[type="number"] { width: 60px; padding: 5px; margin-right: 20px; }
+        .table-container { margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; cursor: pointer; }
+        input[type="text"] { width: calc(100% - 10px); box-sizing: border-box; border: none; padding: 4px; }
+        .button-group button { padding: 10px 15px; margin-right: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        #generateTable { background-color: #4CAF50; color: white; }
+        #exportCSV { background-color: #008CBA; color: white; }
+        #exportPDF { background-color: #f44336; color: white; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
-  <div class="container">
-    <h2>Image Crop & Resize Tool</h2>
 
-    <div class="row">
-      <input type="file" id="upload" accept="image/*">
+    <div class="controls">
+        <label for="numColumns">Number of Columns (N):</label>
+        <input type="number" id="numColumns" value="3" min="1">
+
+        <label for="numRows">Number of Rows (N):</label>
+        <input type="number" id="numRows" value="5" min="1">
+        
+        <button id="generateTable" onclick="generateDataEntryTable()">Generate Table</button>
     </div>
 
-    <div class="row">
-      <button class="btn" id="removeBgBtn" disabled>Remove Background</button>
-      <span class="note">Requires internet (uses remove.bg)</span>
+    <div class="button-group">
+        <button id="exportCSV" onclick="exportData('csv')" disabled>Export to CSV (Excel-Compatible)</button>
+        <button id="exportPDF" onclick="exportData('pdf')" disabled>Export to PDF</button>
     </div>
 
-    <div class="row">
-      <button class="btn" id="cropBtn" disabled>Crop Image</button>
-      <label for="aspect">Aspect Ratio:</label>
-      <select id="aspect">
-        <option value="free">Free</option>
-        <option value="1:1">1:1 (Square)</option>
-        <option value="4:3">4:3</option>
-        <option value="3:2">3:2</option>
-        <option value="16:9">16:9</option>
-      </select>
+    <div class="table-container">
+        <table id="dataTable"></table>
     </div>
 
-    <div class="row">
-      <label for="width">Width:</label>
-      <input type="number" id="width" min="1" />
-      <label for="height">Height:</label>
-      <input type="number" id="height" min="1" />
-      <button class="btn" id="resizeBtn" disabled>Resize</button>
-    </div>
+    <script>
+        const table = document.getElementById('dataTable');
+        const numColsInput = document.getElementById('numColumns');
+        const numRowsInput = document.getElementById('numRows');
+        const exportCSVBtn = document.getElementById('exportCSV');
+        const exportPDFBtn = document.getElementById('exportPDF');
+        
+        // Initial table generation on load
+        document.addEventListener('DOMContentLoaded', generateDataEntryTable);
 
-    <div class="row">
-      <button class="btn" id="downloadBtn" disabled>Download</button>
-    </div>
 
-    <div class="row">
-      <canvas id="canvas"></canvas>
-      <div id="cropOverlay"></div>
-    </div>
+        // --- STEP 1: Generate the Data Entry Table ---
+        function generateDataEntryTable() {
+            const numCols = parseInt(numColsInput.value) || 1;
+            const numRows = parseInt(numRowsInput.value) || 1;
 
-    <div class="row">
-      <span id="status" class="note">No image loaded.</span>
-    </div>
-  </div>
+            if (numCols < 1 || numRows < 1) {
+                alert("Please enter positive values for rows and columns.");
+                return;
+            }
 
-  <script>
-    const uploadInput = document.getElementById('upload');
-    const removeBgBtn = document.getElementById('removeBgBtn');
-    const cropBtn = document.getElementById('cropBtn');
-    const resizeBtn = document.getElementById('resizeBtn');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const widthInput = document.getElementById('width');
-    const heightInput = document.getElementById('height');
-    const aspectSelect = document.getElementById('aspect');
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    const cropOverlay = document.getElementById('cropOverlay');
-    const statusEl = document.getElementById('status');
+            table.innerHTML = ''; // Clear existing table
 
-    let originalImage = null;
-    let bgRemovedImage = null;
-    let cropping = false;
-    let cropStart = null;
-    let cropEnd = null;
+            // 1. Create Header Row (for Dropdown Titles)
+            let thead = table.createTHead();
+            let headerRow = thead.insertRow();
 
-    function drawResized() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const img = bgRemovedImage || originalImage;
-      if (img) ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    }
+            for (let i = 0; i < numCols; i++) {
+                let th = document.createElement('th');
+                // The header itself is a data entry field (acting as your 'Dropdown Title')
+                th.innerHTML = `<input type="text" value="Column ${i + 1}" class="header-input" placeholder="Column Title ${i + 1}">`;
+                headerRow.appendChild(th);
+            }
 
-    uploadInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
+            // 2. Create Data Rows
+            let tbody = table.createTBody();
+            for (let i = 0; i < numRows; i++) {
+                let row = tbody.insertRow();
+                for (let j = 0; j < numCols; j++) {
+                    let cell = row.insertCell();
+                    // Each cell is a data entry field
+                    cell.innerHTML = `<input type="text" value="" class="data-input" placeholder="R${i + 1}C${j + 1}">`;
+                }
+            }
 
-      const img = new Image();
-      img.onload = () => {
-        originalImage = img;
-        bgRemovedImage = null;
-        canvas.width = img.width;
-        canvas.height = img.height;
-        widthInput.value = img.width;
-        heightInput.value = img.height;
-        drawResized();
-        statusEl.textContent = "Image loaded.";
-        removeBgBtn.disabled = false;
-        resizeBtn.disabled = false;
-        downloadBtn.disabled = false;
-        cropBtn.disabled = false;
-      };
-      img.src = URL.createObjectURL(file);
-    });
-
-    removeBgBtn.addEventListener('click', async () => {
-      if (!originalImage) return;
-      statusEl.textContent = "Removing background...";
-
-      const blob = await fetch(originalImage.src).then(res => res.blob());
-      const formData = new FormData();
-      formData.append("image_file", blob);
-      formData.append("size", "auto");
-
-      try {
-        const res = await fetch("https://api.remove.bg/v1.0/removebg", {
-          method: "POST",
-          headers: { "X-Api-Key": "INSERT_YOUR_API_KEY" },
-          body: formData,
-        });
-
-        if (!res.ok) throw new Error("Background removal failed");
-
-        const blobResult = await res.blob();
-        const img = new Image();
-        img.onload = () => {
-          bgRemovedImage = img;
-          canvas.width = img.width;
-          canvas.height = img.height;
-          widthInput.value = img.width;
-          heightInput.value = img.height;
-          drawResized();
-          statusEl.textContent = "Background removed.";
-        };
-        img.src = URL.createObjectURL(blobResult);
-      } catch (err) {
-        statusEl.textContent = "Error removing background.";
-      }
-    });
-
-    resizeBtn.addEventListener('click', () => {
-      const w = parseInt(widthInput.value);
-      const h = parseInt(heightInput.value);
-      if (w && h) {
-        const img = bgRemovedImage || originalImage;
-        const temp = document.createElement('canvas');
-        temp.width = w;
-        temp.height = h;
-        temp.getContext('2d').drawImage(img, 0, 0, w, h);
-        const newImg = new Image();
-        newImg.onload = () => {
-          originalImage = newImg;
-          bgRemovedImage = null;
-          canvas.width = w;
-          canvas.height = h;
-          drawResized();
-          statusEl.textContent = "Image resized.";
-        };
-        newImg.src = temp.toDataURL();
-      }
-    });
-
-    downloadBtn.addEventListener('click', () => {
-      const a = document.createElement('a');
-      a.download = "image.png";
-      a.href = canvas.toDataURL();
-      a.click();
-    });
-
-    function getAspectRatio() {
-      const value = aspectSelect.value;
-      if (value === "free") return null;
-      const [w, h] = value.split(':').map(Number);
-      return w / h;
-    }
-
-    cropBtn.addEventListener('click', () => {
-      cropping = true;
-      cropStart = null;
-      cropEnd = null;
-      cropOverlay.style.display = 'none';
-      statusEl.textContent = "Cropping mode: drag on image.";
-      canvas.style.cursor = 'crosshair';
-    });
-
-    canvas.addEventListener('mousedown', (e) => {
-      if (!cropping) return;
-      const rect = canvas.getBoundingClientRect();
-      cropStart = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-    });
-
-    canvas.addEventListener('mousemove', (e) => {
-      if (!cropping || !cropStart) return;
-      const rect = canvas.getBoundingClientRect();
-      const aspect = getAspectRatio();
-
-      let endX = e.clientX - rect.left;
-      let endY = e.clientY - rect.top;
-      let width = endX - cropStart.x;
-      let height = endY - cropStart.y;
-
-      if (aspect) {
-        const dirX = width >= 0 ? 1 : -1;
-        const dirY = height >= 0 ? 1 : -1;
-        width = Math.abs(width);
-        height = Math.abs(height);
-
-        if (width / height > aspect) {
-          width = height * aspect;
-        } else {
-          height = width / aspect;
+            // Enable export buttons
+            exportCSVBtn.disabled = false;
+            exportPDFBtn.disabled = false;
         }
 
-        width *= dirX;
-        height *= dirY;
-        endX = cropStart.x + width;
-        endY = cropStart.y + height;
-      }
+        // --- STEP 2: Collect Data from the Table ---
+        function collectTableData() {
+            const data = [];
+            const headerRow = table.querySelector('thead tr');
+            const dataRows = table.querySelectorAll('tbody tr');
 
-      cropEnd = { x: endX, y: endY };
+            if (!headerRow) return null;
 
-      // Draw overlay box
-      cropOverlay.style.display = 'block';
-      cropOverlay.style.left = Math.min(cropStart.x, cropEnd.x) + canvas.offsetLeft + 'px';
-      cropOverlay.style.top = Math.min(cropStart.y, cropEnd.y) + canvas.offsetTop + 'px';
-      cropOverlay.style.width = Math.abs(cropEnd.x - cropStart.x) + 'px';
-      cropOverlay.style.height = Math.abs(cropEnd.y - cropStart.y) + 'px';
-    });
+            // Collect Headers (Titles)
+            const headers = Array.from(headerRow.querySelectorAll('input.header-input')).map(input => input.value);
+            data.push(headers);
 
-    canvas.addEventListener('mouseup', () => {
-      if (!cropping || !cropStart || !cropEnd) return;
-      cropping = false;
-      cropOverlay.style.display = 'none';
-      canvas.style.cursor = 'default';
+            // Collect Row Data
+            dataRows.forEach(row => {
+                const rowData = Array.from(row.querySelectorAll('input.data-input')).map(input => input.value);
+                data.push(rowData);
+            });
 
-      let x = Math.min(cropStart.x, cropEnd.x);
-      let y = Math.min(cropStart.y, cropEnd.y);
-      let w = Math.abs(cropEnd.x - cropStart.x);
-      let h = Math.abs(cropEnd.y - cropStart.y);
+            return data;
+        }
 
-      if (w < 5 || h < 5) {
-        statusEl.textContent = "Crop area too small.";
-        return;
-      }
 
-      const temp = document.createElement('canvas');
-      temp.width = w;
-      temp.height = h;
-      temp.getContext('2d').drawImage(canvas, x, y, w, h, 0, 0, w, h);
+        // --- STEP 3: Export Logic ---
+        function exportData(format) {
+            const data = collectTableData();
+            if (!data) return;
 
-      const img = new Image();
-      img.onload = () => {
-        originalImage = img;
-        bgRemovedImage = null;
-        canvas.width = w;
-        canvas.height = h;
-        widthInput.value = w;
-        heightInput.value = h;
-        drawResized();
-        statusEl.textContent = "Image cropped.";
-      };
-      img.src = temp.toDataURL();
-    });
-  </script>
+            if (format === 'csv') {
+                exportToCSV(data);
+            } else if (format === 'pdf') {
+                exportToPDF(data);
+            }
+        }
+
+        // --- EXPORT TO CSV (Excel-Compatible) ---
+        function exportToCSV(data) {
+            // Converts the array of arrays into a CSV string.
+            // Quotes are used for cells that contain commas to handle data integrity.
+            const csvContent = data.map(row => 
+                row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(',')
+            ).join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'data_export.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // --- EXPORT TO PDF ---
+        function exportToPDF(data) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Separate headers from the rest of the data
+            const headers = [data[0]]; // AutoTable expects headers as an array of arrays
+            const body = data.slice(1);
+
+            // Use the AutoTable plugin
+            doc.autoTable({
+                head: headers,
+                body: body,
+                startY: 10,
+                theme: 'grid',
+                styles: { 
+                    fontSize: 10, 
+                    cellPadding: 3 
+                },
+                headStyles: { 
+                    fillColor: [200, 200, 200], 
+                    textColor: [0, 0, 0], 
+                    fontStyle: 'bold' 
+                }
+            });
+
+            doc.save('data_export.pdf');
+        }
+    </script>
+
 </body>
 </html>
